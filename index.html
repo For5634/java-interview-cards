@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>八股卡片复习</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="simple-card-page">
+    <aside class="simple-local-warning hidden" id="localStorageNotice" aria-live="polite">
+      <strong>当前是直接打开的离线页面</strong>
+      <span>离线页面无法读取本机卡片库。请通过本地服务打开，已保存的卡片才会自动恢复。</span>
+      <a href="http://localhost:8787/review.html">打开已保存的八股卡片</a>
+    </aside>
+    <div class="shell simple-card-shell">
+      <header class="topbar simple-topbar">
+        <div>
+          <p class="eyebrow">review mode · read-only</p>
+          <h1>八股卡片复习</h1>
+        </div>
+        <div class="top-actions">
+          <a class="ghost-button" href="index.html">工具首页</a>
+          <a class="ghost-button" href="app.html">算法卡片</a>
+          <a class="ghost-button" href="interview.html">编辑模式</a>
+          <button class="primary-button" id="flipButton" type="button">查看答案</button>
+        </div>
+      </header>
+
+      <main class="simple-workspace">
+        <aside class="panel simple-filter-panel" aria-label="卡片筛选">
+          <label class="field-label" for="searchInput">搜索卡片</label>
+          <input id="searchInput" type="search" placeholder="题面、答案或分类">
+          <div class="filter-block">
+            <div class="section-title">卡片分类</div>
+            <div class="tag-grid" id="categoryFilters"></div>
+          </div>
+          <p class="simple-count" id="cardCount">0 张卡片</p>
+          <div class="simple-card-list" id="cardList" aria-label="卡片列表"></div>
+        </aside>
+
+        <section class="simple-study-zone" aria-label="复习卡片">
+          <article class="flashcard simple-flashcard" id="flashcard" tabindex="0" aria-live="polite">
+            <div class="card-side card-front simple-card-face">
+              <div class="simple-card-meta"><span id="cardCategory">未分类</span><span id="cardProficiency">生疏</span></div>
+              <p class="simple-side-label">题面</p>
+              <h2 id="cardQuestion">加载卡片中……</h2>
+              <p class="simple-flip-tip" id="cardFlipTip">点击卡片查看精简答案。</p>
+            </div>
+            <div class="card-side card-back simple-card-face">
+              <div class="simple-card-meta"><span id="cardCategoryBack">未分类</span><span id="cardProficiencyBack">生疏</span></div>
+              <p class="simple-side-label" id="cardAnswerLabel">精简答案</p>
+              <div class="simple-answer" id="cardAnswer">答案会显示在这里。</div>
+              <button class="simple-detail-trigger hidden" id="showDetailedButton" type="button">查看详细答案</button>
+            </div>
+          </article>
+          <div class="review-actions simple-review-actions" aria-label="更新记忆熟练度">
+            <button id="weakButton" type="button">生疏</button>
+            <button id="normalButton" type="button">一般</button>
+            <button id="masteredButton" type="button">熟练</button>
+          </div>
+          <p class="simple-review-note">复习后点一下熟练度即可更新；快捷键：F 翻面，1/2/3 更新熟练度，←/→ 切换卡片。</p>
+        </section>
+
+        <aside class="panel simple-stats-panel" aria-label="学习进度">
+          <div class="stats-section">
+            <div class="section-title">学习进度</div>
+            <div class="stats-grid">
+              <div class="stat-item"><strong id="totalCount">0</strong><span>总计</span></div>
+              <div class="stat-item stat-weak"><strong id="weakCount">0</strong><span>生疏</span></div>
+              <div class="stat-item stat-normal"><strong id="normalCount">0</strong><span>一般</span></div>
+              <div class="stat-item stat-mastered"><strong id="masteredCount">0</strong><span>熟练</span></div>
+            </div>
+            <p class="study-tip" id="studyTip">开始复习吧！</p>
+          </div>
+
+          <div class="stats-section">
+            <div class="section-title">快捷键</div>
+            <div class="shortcut-list">
+              <div class="shortcut-item"><kbd>F</kbd><span>翻面</span></div>
+              <div class="shortcut-item"><kbd>1</kbd><span>标记为生疏</span></div>
+              <div class="shortcut-item"><kbd>2</kbd><span>标记为一般</span></div>
+              <div class="shortcut-item"><kbd>3</kbd><span>标记为熟练</span></div>
+              <div class="shortcut-item"><kbd>←</kbd><kbd>→</kbd><span>切换卡片</span></div>
+            </div>
+          </div>
+
+          <div class="stats-section">
+            <a class="primary-button full" href="interview.html">进入编辑模式</a>
+            <p class="note">编辑模式可新建、修改、删除卡片，支持 AI 批量制卡。</p>
+          </div>
+        </aside>
+      </main>
+    </div>
+    <div class="simple-toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="review.js"></script>
+  </body>
+</html>

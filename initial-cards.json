@@ -1,0 +1,1174 @@
+{
+  "version": 1,
+  "savedAt": "2026-10-04T14:43:38.402Z",
+  "cards": [
+    {
+      "id": "card-1791041187688-3l7zv",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "说说 WebSocket 和 SSE 通信的区别及局限性？",
+      "briefAnswer": "WebSocket 和 SSE 都可以做服务端实时推送，但它们的核心区别是：WebSocket 是全双工通信，SSE 是服务端到客户端的单向通信。\nWebSocket 建立连接后，客户端和服务端都可以主动发送消息，比较适合聊天、在线游戏、协同编辑这类需要高频双向交互的场景。它的缺点是连接管理更复杂，心跳、断线重连、负载均衡都要额外考虑，而且有些代理或网关对 WebSocket 支持不如普通 HTTP 友好。\nSSE 本质上是基于 HTTP 的长连接，服务端持续通过 text/event-stream 向客户端推送数据。它实现简单，而且浏览器原生支持自动重连，很适合 LLM 流式输出、消息通知、日志推送 这类服务端单向推送场景。它的局限是只能服务端推客户端，客户端如果要发消息还得走普通 HTTP；另外通常只适合文本数据，不适合二进制和高频双向通信。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791041037927-tm8pd",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "MCP 协议通常采用什么通信方式？",
+      "briefAnswer": "MCP 协议现在主要有两种常见通信方式：本地一般用 stdio，远程服务一般用 Streamable HTTP。MCP 消息本身通常采用 JSON-RPC 的形式进行交互。MCP TypeScript SDK\nstdio 主要用于本地场景，比如 Agent 启动一个本地 MCP Server 子进程，然后通过这个进程的 stdin/stdout 传输 JSON-RPC 消息。它不需要额外启动 HTTP 服务，实现比较简单，很适合本地文件系统、IDE 工具这类 MCP Server。MCP TypeScript SDK\n而如果 MCP Server 是远程部署的，现在推荐使用 Streamable HTTP。客户端通过 HTTP POST 发送请求，服务端既可以直接返回 JSON，也可以通过 SSE 流式返回消息。以前 MCP 还常用 HTTP + SSE，但这已经属于旧的传输方式，新实现优先使用 Streamable HTTP。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791041023797-uag4n",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "什么是 A2A 协议？它和 MCP 协议的区别是什么？",
+      "briefAnswer": "A2A，也就是 Agent2Agent Protocol，我理解它主要解决的是 Agent 和 Agent 之间如何发现彼此、通信和协作 的问题。比如一个主 Agent 接到“帮我规划并预订一次出差”的任务，它可以通过 A2A 找到“机票 Agent”“酒店 Agent”“报销 Agent”，然后把子任务分发过去，再接收它们返回的结果。A2A 里通常会通过 Agent Card 描述一个 Agent 有哪些能力，再通过标准化协议完成任务发送、状态更新和结果返回。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791040232415-fj2k3",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "MCP 和 Agent Skill 的区别是什么？",
+      "briefAnswer": "MCP 和 Agent Skill 不是一个层级的东西。\nMCP 更偏“标准协议”，解决的是：Agent 怎么以统一方式连接外部工具、数据源和服务。比如文件系统、数据库、搜索服务都可以通过 MCP Server 暴露能力，Agent 通过统一协议去发现和调用这些能力，而不用为每个服务单独写一套接入逻辑。\nAgent Skill 更偏“任务能力封装”，解决的是：Agent 遇到某类任务时应该怎么做。它通常会把 Prompt、业务流程、Tool 调用、判断逻辑、输出格式组合起来。一个 Skill 内部完全可以调用多个 MCP 提供的 Tool。\n比如我的心理智能体里，可以有一个“心理危机干预 Skill”，流程是先做风险识别，再检索知识库，再生成干预回复；而知识库检索、告警通知这些底层能力，可以通过 MCP 接进来。\n\nAgent 负责思考和决策，Skill 负责描述某类任务怎么做，Tool 负责真正执行动作，Function Calling 负责让模型结构化调用工具，MCP 负责标准化连接外部工具和资源。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791039686301-5puud",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "skill是什么?它的作用是什么?",
+      "briefAnswer": "在 Agent 里，我理解 Skill 是对某一类能力或任务流程的封装。它通常不是一个最底层的函数，而是把 Prompt、工具调用、业务规则、执行步骤以及输出格式 组合起来，形成一个可以被 Agent 复用的“任务能力”。\n比如在我的心理健康智能体里，我可以定义一个 supportive_response Skill。用户出现情绪困扰时，Agent 识别到对应意图后，就调用这个 Skill。Skill 内部会规定：先分析用户情绪和风险等级，再决定是否检索心理知识库，必要时调用安全检测工具，最后按照支持性对话的格式生成回复。\n它主要有三个作用：第一是能力复用，同一套任务逻辑不用每个 Agent 重写；第二是流程标准化，把复杂任务固化成相对稳定的执行流程；第三是便于扩展和管理，后续新增能力时增加一个 Skill，而不是修改整个 Agent。\n\n在 Agent 里，我理解 Skill 是对某一类能力或任务流程的封装。它通常不是一个最底层的函数，而是把 Prompt、工具调用、业务规则、执行步骤以及输出格式 组合起来，形成一个可以被 Agent 复用的“任务能力”。\n比如在我的心理健康智能体里，我可以定义一个 supportive_response Skill。用户出现情绪困扰时，Agent 识别到对应意图后，就调用这个 Skill。Skill 内部会规定：先分析用户情绪和风险等级，再决定是否检索心理知识库，必要时调用安全检测工具，最后按照支持性对话的格式生成回复。\n它主要有三个作用：第一是能力复用，同一套任务逻辑不用每个 Agent 重写；第二是流程标准化，把复杂任务固化成相对稳定的执行流程；第三是便于扩展和管理，后续新增能力时增加一个 Skill，而不是修改整个 Agent。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791022716378-rkvi7",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "MCP 和 Function Calling 有什么区别？有没有实际跑过 MCP？",
+      "briefAnswer": "我理解 Function Calling 和 MCP 不是替代关系，而是解决不同层级的问题。\nFunction Calling 主要解决的是：模型怎么选择并调用一个函数。我们把函数的 name、description、参数 Schema 给模型，模型返回函数名和参数，再由业务代码真正执行。\nMCP 解决的是：Agent 怎么以统一标准连接外部工具和数据源。它定义了 Client/Server 的通信方式以及 Tools、Resources、Prompts 等能力。现在常见传输是本地 stdio，远程服务则使用 Streamable HTTP。MCP Python SDK\n我实际项目里也跑过 MCP。比如在 Agent 系统里，把外部能力封装成 MCP Server，Agent 作为 MCP Client 连接，先获取 Server 暴露的工具，再根据模型决策调用具体 Tool，拿到结果后继续完成后续推理。官方 MCP 的 Client/Server 也是通过能力协商来确定 Server 支持哪些 Tools、Resources、Prompts。Function Calling 解决“模型怎么调用工具”，MCP 解决“工具怎么标准化接入 Agent”；实际使用中，通常是 MCP 负责工具接入和发现，LLM 再通过 Tool Calling 完成具体调用。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791020047521-gvvjp",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "什么是 MCP（模型上下文协议）？讲讲它的核心内容？",
+      "briefAnswer": "MCP，也就是 Model Context Protocol（模型上下文协议），本质上是一个开放标准，用来统一 大模型/Agent 和外部工具、数据源之间的连接方式。可以把它理解成 AI 领域的“USB 接口”：以前每接一个数据库、搜索服务都要单独开发，现在按照 MCP 标准实现一次，就可以被不同 Agent 或模型客户端复用。MCP TypeScript SDK\n它的核心架构主要有三部分：Host、Client、Server。Host 是运行 Agent 的应用，Client 负责建立 MCP 连接，Server 负责真正提供外部能力。MCP Server 主要向模型暴露三类能力：Tools、Resources、Prompts。Tools 是可以执行的操作，比如查数据库、调用 API；Resources 是模型可以读取的数据，比如文件、知识库；Prompts 是服务端提供的可复用提示模板。MCP TypeScript SDK\n调用流程一般就是：Agent → MCP Client → MCP Server → 外部系统 → 返回结果 → Agent。底层可以通过 stdio 或 Streamable HTTP 等方式通信。\nFunction Calling 解决“模型怎么调用一个工具”，MCP 进一步解决“不同模型和不同工具之间怎么用统一协议接起来”，核心价值就是标准化、解耦和复用。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791019868412-4q18u",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "大模型的 Function Call 能力是怎么训练出来的？",
+      "briefAnswer": "Function Call 的能力主要靠两个训练阶段来培养，这两个阶段解决的是不同的问题。\n\n第一个是 SFT监督微调，就是给模型喂大量「包含工具调用的完整对话样本」，每条样本覆盖工具定义、用户问题、模型应该输出的结构化 JSON 调用、工具执行结果、最终答案，让模型通过模仿学会整套流程。但光有 SFT 不够，模型可能学得过激，遇到什么问题都想调工具。\n\n第二个阶段是 RLHF基于人类反馈的强化学习，通过人类标注「哪种回答更好」来训练奖励模型，再用强化学习调整主模型，让它学会「能直接回答的就直接回答，需要实时数据才去调工具」这个边界感。\n\n一句话总结：SFT 教会怎么调，RLHF 教会什么时候调",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791019292874-ln30o",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "什么是 Function Calling ？原理是什么？",
+      "briefAnswer": "Function Calling 就是让大模型不直接执行外部操作，而是根据用户意图判断要不要调用某个函数，并生成对应的函数名和参数，真正的执行还是由业务代码完成。\n它的原理是：我们先把可用工具的 name、description、参数 Schema 提供给模型。模型收到用户问题后，如果判断需要调用工具，就返回结构化的调用信息，比如 getWeather(city=\"成都\")。程序拿到这个结果后去真正调用接口，再把工具返回结果交给模型，最后由模型组织成自然语言回复。\n\n具定义用 JSON schema 描述，description 字段是模型判断是否调用的核心依据；模型通过 finish_reason 为 tool_calls 来明确告知需要工具帮助；以及模型支持一次返回多个 tool_calls 实现并行调用。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791017047950-94lsz",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "不同来源的文档发生知识冲突时，RAG 应该信谁？",
+      "briefAnswer": "不同来源的文档发生冲突时，我一般不会让模型自己“猜谁对”，而是给知识源设置明确的可信度和优先级规则。\n比如优先信 官方文档、最新版本、权威来源，其次才是内部经验文档或用户生成内容。同时在 Metadata 里保存 source、version、updated_at、authority 这些信息，检索和 Rerank 时把它们作为排序依据。\n如果两个高可信来源仍然冲突，我会让模型显式告诉用户存在冲突，并展示不同来源和时间，而不是强行生成唯一答案。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791016871061-pno7q",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "在实际落地中，你觉得 RAG 最难的地方是哪里？",
+      "briefAnswer": "我觉得 RAG 最难的不是把它跑起来，一个基础的 Demo 一两天就能搭起来，难的是把它调好。工程上最让我头疼的有三块。\n\n第一是文档预处理，原始数据的格式五花八门，PDF 里面的表格、图片、嵌套的格式，处理不好就是一堆乱码进了知识库，进去的是垃圾出来的也是垃圾。\n\n第二是检索质量的调优，向量召回不准是整个系统效果的天花板，但问题来源很多，Chunking、Embedding、Query 改写，任何一个环节出问题都会影响结果，排查起来很费劲。\n\n第三是效果评估，答案对不对很难系统性地衡量，不知道是哪个环节出了问题，优化就变成了瞎猜。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791016353415-i7hac",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "RAG 知识库如何实现动态与持续更新？",
+      "briefAnswer": "我一般会把 RAG 知识库更新分成 增量更新、变更同步和删除失效 三部分。\n新增文档时，不需要重建整个知识库，而是只对新增内容做 解析、Chunk、Embedding，然后写入向量数据库；已有文档发生修改时，通过文档 ID 或版本号定位旧 Chunk，先删除或覆盖旧向量，再重新生成新的向量；文档被删除时，也要同步删除对应的向量和 Metadata。\n工程上通常还会配合 定时任务、消息队列或者 CDC 来监听数据源变化，实现自动同步，同时给文档增加 version、updated_at、source_id 这些字段，保证版本一致性和可追踪。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791016030855-m98zg",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "怎么量化你的 RAG 效果？",
+      "briefAnswer": "我一般会把 RAG 效果拆成 检索效果和生成效果 两部分量化。\n检索侧主要看 Recall@K、HitRate、MRR、NDCG，判断正确文档有没有被召回、排名是否靠前；生成侧主要看 Answer Correctness、Faithfulness、Answer Relevance，判断答案是否正确、是否忠于检索内容、是否真正回答了用户问题。\n实际项目里我会先构造一套 Query-标准答案-相关文档 的评测集，然后离线跑不同的 Chunk、TopK、召回和 Rerank 策略做对比。\n生成层评估（RAGAs 框架）\nContext Recall 低，你可以把它理解为「检索结果里缺少了答好这道题必要的信息」，说明检索层没召回到正确内容，优化方向是换更强的 Embedding 模型、调整 Chunking 策略、或者加多路召回来补充覆盖面。\n\nContext Precision 低，说明检索召回了太多噪音，相关内容是找到了，但不相关的内容也混进来了，把 LLM 的注意力稀释掉了，优化方向是加强 Rerank 模型、调低最终送给 LLM 的 chunk 数量。\n\nFaithfulness 低，说明 LLM 在编造，幻觉问题多，你回答里说的东西在参考资料里找不到依据，优化方向是加强 Prompt 约束、引入引用核查、或者做检索质量门控，防止低质量上下文进入生成阶段。\n\nAnswer Relevancy 低，说明答案跑题了，没有聚焦在用户问的问题上，通常是 Prompt 的指令不够明确，告诉 LLM「请严格回答问题本身，不要展开无关内容」往往就能改善。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791015537691-sskkq",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "如何规避 RAG 系统中大模型的幻觉？",
+      "briefAnswer": "我一般会从 检索、Prompt 和生成校验 三个层面减少 RAG 幻觉。\n首先保证检索内容可靠且相关，比如做好 Chunking、Query Rewrite、多路召回和 Rerank，避免把错误或无关文档提供给模型。其次在 Prompt 中明确要求模型只能基于检索到的上下文回答，如果证据不足就直接说不知道，不允许自行补全事实。\n最后可以增加引用和结果校验机制，要求回答标注对应文档来源，并对关键答案做二次验证；如果检索相似度低于阈值，就直接拒答或者重新检索。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791015025677-f64b8",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "RAG 检索优化策略有哪些？",
+      "briefAnswer": "RAG 检索优化主要有几个方向：Query Rewrite 优化查询、合理 Chunking、多路召回、RRF 融合、Rerank 精排，以及调整 TopK 和相似度阈值。\n实际项目里我一般会用 向量检索 + BM25 多路召回，再通过 RRF 融合，最后用 Rerank 选出最相关的几个 Chunk 给大模型。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1791013873376-g9fky",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "如何润色用户的 Query（Query Rewrite）？目的是什么？",
+      "briefAnswer": "Query Rewrite 的核心目的，是把用户原始输入改写成一个**更清晰、更完整、更适合模型理解或检索的 Query**。因为用户真实输入往往比较口语化，会存在指代不清、信息缺失、表达冗余的问题。如果直接拿原 Query 去做 RAG 检索，可能会导致召回结果不准确。所以我一般会在检索之前增加一层 Query Rewrite。\n\n具体实现上，我会结合**当前用户 Query + 多轮对话上下文**，让 LLM 做改写。比如用户前面一直在讨论 Redis，突然问一句“它为什么会失效？”，原 Query 直接检索效果很差，我会把它改写成类似 **“Redis 缓存中的 Key 为什么会失效？常见的过期和淘汰机制有哪些？”**，把指代补全。另外还可以做关键词提取、去除无关信息、同义词扩展，甚至把一个复杂问题拆成多个子 Query，再分别检索。\n\n在 RAG 里，Query Rewrite 最主要解决的就是**用户表达和知识库文档表达不一致的问题**，从而提高 Recall 和后续 Rerank 的效果。不过我不会让 Rewrite 改变用户原始意图，所以工程上一般会保留 original query，同时记录 rewritten query 到 Trace 里，方便发现改写偏移的问题。整个链路可以理解为：**原始 Query → Query Rewrite → Retrieval → RRF/Rerank → LLM 生成答案**。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790935344946-jc7xj",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "请你介绍一下向量检索和关键词检索的区别？",
+      "briefAnswer": "关键词检索（BM25 这类）靠的是词频统计，看查询词在文档里出现了多少次，擅长精确命中；向量检索靠的是语义空间里的距离，能理解「换了种表达方式的同一个意思」，擅长模糊语义匹配。两者各有盲区：BM25 遇到同义词就没辙，向量检索遇到专有名词、产品型号这类精确词就容易漏。所以 RAG 系统里通常两路都跑，向量检索捕获语义相关的内容，BM25 精准命中关键词，再用 RRF 算法把两路结果合并，这样覆盖面比单路宽很多。\n\n关键词检索（BM25 这类）靠的是词频统计，看查询词在文档里出现了多少次，擅长精确命中；向量检索靠的是语义空间里的距离，能理解「换了种表达方式的同一个意思」，擅长模糊语义匹配。两者各有盲区：BM25 遇到同义词就没辙，向量检索遇到专有名词、产品型号这类精确词就容易漏。所以 RAG 系统里通常两路都跑，向量检索捕获语义相关的内容，BM25 精准命中关键词，再用 RRF 算法把两路结果合并，这样覆盖面比单路宽很多。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790935065791-ue42a",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "你使用 RAG 给大模型一个输入，系统是怎样的工作流程？",
+      "briefAnswer": "在我的项目里，一次完整的 RAG 请求大概分成 Query 处理、检索、重排、上下文构造、模型生成 这几个步骤。\n首先用户输入问题后，我会先做预处理,把口语化的问题转成适合检索的形式，然后用和知识库一致的 Embedding 模型把 Query 转成向量。接着一边去 ChromaDB 做向量召回，找语义相近的 Chunk；另一边用 BM25 做关键词召回。两路结果出来以后，我会通过 RRF 做融合，再用 Rerank 模型重新排序，选出最相关的 Top-K 文档。\n然后系统会把这些检索出来的 Chunk，连同用户原始问题一起组装成 Prompt，比如加入“只能根据下面知识回答”这类约束，再发送给大模型。大模型基于这些外部知识生成最终回答，而不是只依赖自身参数里的知识。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790931868441-t36ze",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "讲讲你用的向量数据库？数据量级是多大？性能如何？遇到过性能瓶颈吗？",
+      "briefAnswer": "我项目里用的是 ChromaDB，主要存 RAG 知识库切分后的 Chunk 向量，同时保存文档来源、Chunk ID、类别等 metadata。数据规模属于中小型知识库，还没有到百万、千万级向量，所以我当时没有选择 Milvus 这种分布式向量数据库。ChromaDB 本身默认基于 HNSW 做近似最近邻检索，在这个数据规模下检索性能完全够用。\n实际链路里我不是只做向量检索，而是用了 ChromaDB 向量召回 + BM25 关键词召回，然后通过 RRF 做融合，最后再 Rerank。我们重点评估的不是单纯数据库查询耗时，而是召回效果和整个 RAG 链路的延迟。项目里 RAG 评测做到 HitRate 0.9667、MRR 0.9083，说明正确文档基本能够排在比较靠前的位置。\n性能瓶颈方面，目前向量数据库本身不是主要瓶颈，因为数据规模还比较小。真正耗时更多是在 Embedding、两路召回后的融合、Rerank，以及最后的大模型生成阶段。之前也考虑过一个问题，就是如果后续知识库扩大到百万甚至千万级，ChromaDB 单机的存储、索引构建和并发能力可能会成为瓶颈，这时候我会考虑迁移到 Milvus，通过分片和分布式部署提升扩展能力。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790930447612-ldfir",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "什么是向量数据库？有没有做过向量数据库的对比选型？",
+      "briefAnswer": "向量数据库本质上是专门用来存储和检索高维向量的数据库。在 RAG 里，文档经过 Embedding 之后会变成向量，同时还会保存原始文本、文档 ID、来源、标签等 metadata。用户提问时，同样把 Query 转成向量，然后通过余弦相似度、内积或者欧氏距离做 Top-K 近邻搜索，把最相关的 Chunk 找出来。底层一般会通过 HNSW、IVF 这类 ANN 近似最近邻索引来提升检索速度。\n我在项目里对比过 ChromaDB 和 Milvus。Milvus 是完整的分布式向量数据库，适合千万甚至更大规模的数据，扩展能力比较强，但部署和运维成本更高；ChromaDB 比较轻量，支持向量持久化、metadata 过滤，也比较容易和 Python、LangChain 这类生态集成。\n所以在我的 RAG 项目里最后选择了 ChromaDB，主要是因为知识库规模并不大，更关注快速开发和本地部署，没有必要为了分布式扩展能力引入 Milvus 的复杂度。如果以后数据规模到了千万级、QPS 比较高，或者需要多节点扩容，我会更倾向 Milvus 这类分布式向量数据库。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790930338773-sq9lt",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "Embedding 有哪几种算法你了解过吗？",
+      "briefAnswer": "我了解的 Embedding 方法大致可以分成几类。早期比较经典的是 Word2Vec，主要是做词级别向量表示；现在在 RAG 里更常用的是基于 Transformer 的文本向量模型，比如 BGE、GTE 等。这类模型不是只看单个词，而是直接把一句话或者一个 Chunk 编码成向量，更适合做语义检索。实际使用时通常配合余弦相似度或者内积来做 Top-K 检索。\n另外，从检索方式上还可以分成 稠密向量、稀疏向量和混合检索。稠密向量就是常见的 Embedding，擅长语义匹配；稀疏向量像 BM25，更偏关键词匹配；",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790927035253-al8wv",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "在 RAG 中 Embedding 究竟是什么？如何选择和评估一个 Embedding 模型？",
+      "briefAnswer": "Embedding 在 RAG 中主要负责把文本转换成向量表示，让模型能够通过向量空间中的相似度找到语义相关的内容。比如用户问“忘记密码怎么办”，知识库中可能是“账号密码重置流程”，虽然关键词不完全一致，但是经过 Embedding 后两个文本的语义向量比较接近，可以被检索出来。\n在项目中选择 Embedding 模型时，我主要关注2个方面。第一是检索效果，会通过 MTEB 等公开评测，以及结合业务数据构造测试集，评估 Recall@K、MRR 等指标；第二部分是知识库的构成，如果知识库全是中文，一般会选用bge和qwen，如果是中英混合选用bge-m3，如果全是英文，选用openAI的模型.",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790910520918-7n14t",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "如何规避语义被切割的问题?",
+      "briefAnswer": "语义切割问题主要是因为简单按照固定长度切分时，可能会把一个完整的概念或者上下文拆到两个 Chunk 中，导致后续检索时信息不完整。我的处理方式一般是尽量让切分过程感知文档结构，而不是单纯按照字符数量切。\n在实际项目中，首先会采用结构化切分，比如 Markdown、技术文档按照标题、章节、段落进行切分，保留标题信息作为 metadata；其次会设置一定的 overlap 重叠窗口，比如前后 Chunk 保留一部分相同内容，避免关键语义刚好被切断。如果文档复杂，还可以采用语义切分，根据句子之间的语义相似度判断切分位置，让语义相关的内容保持在同一个 Chunk 中。\n另外，在 RAG 系统中也不是只依靠 Chunk 本身解决问题，还可以通过 metadata 增强上下文，比如保存章节、页码、文档来源等信息，在检索时结合这些信息召回更完整的内容，从而降低语义丢失的问题。实际应用中通常是结构化切分 + overlap + 合理的 Chunk 大小结合使用。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790910101867-ub2cz",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "RAG 中的文档是怎么存的？粒度是多大？详细说说文档切割（Chunking）策略？",
+      "briefAnswer": "现在回答上一个问题\nRAG 中的文档一般不会直接以完整文件形式存储，而是会先经过文档解析和 Chunk 切割，将原始文档拆分成多个文本块，然后对每个 Chunk 生成 Embedding 向量，最终存入向量数据库。同时会保存一些 metadata 信息，比如文档来源、页码、标题、章节等，用于后续检索和溯源。\n\nChunk 的粒度没有固定标准，实际项目中一般控制在几百 token 左右，比如 300～1000 token。太小会导致上下文不完整，检索到的信息缺少语义；太大会引入大量无关内容，降低检索准确率。具体大小需要根据业务调整，比如 FAQ 可以按照问答粒度切分，技术文档通常按照章节或者标题层级切分。\n\n在 Chunking 策略上，常见方式有固定长度切分、递归字符切分、语义切分以及结构化切分。实际项目中我更倾向于根据文档类型选择策略，比如 Markdown 或技术文档按照标题层级切分，普通文本采用递归切分，并设置一定 overlap 保证上下文连续；如果对检索效果要求较高，可以使用语义切分，让语义相关的内容尽量保持在同一个 Chunk 中。最终目标是在检索准确性、上下文完整性和系统性能之间取得平衡。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790909800868-ztaec",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "相比直接微调 LLM，RAG 解决了什么问题？微调和 RAG 各自的优劣势是什么",
+      "briefAnswer": "相比直接微调 LLM，RAG 主要解决的是模型知识不足、知识更新困难以及幻觉问题。微调是改变模型参数，让模型学习新的能力或者行为；而 RAG 不修改模型参数，而是在推理阶段检索外部知识，将相关内容作为上下文提供给模型。\nRAG 的优势是知识更新成本低，适合企业知识库、文档问答等场景，只需要更新知识库即可让模型获取最新信息；缺点是效果依赖检索质量。微调更适合改变模型行为，比如领域术语理解、固定格式输出等，但训练成本更高，而且知识更新需要重新训练。\n在实际项目中，我会根据场景选择，如果主要是解决知识获取问题优先使用 RAG；如果是提升模型特定任务能力，则考虑 LoRA 等微调方式，很多情况下也会结合使用。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790770124390-9s89h",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "大模型RAG用于解决什么问题?",
+      "briefAnswer": "RAG 主要解决大模型知识不足、知识更新困难以及容易产生幻觉的问题。它通过先从外部知识库中检索相关资料，再将检索结果作为上下文输入给大模型，让模型基于真实知识生成回答。\n在实际应用中，比如企业知识库问答，不需要重新训练模型，只需要更新知识库即可让模型获取最新业务信息，同时降低模型编造答案的概率。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790765564294-9e5il",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "什么是rag?",
+      "briefAnswer": "RAG 全称是是检索增强生成。我理解它解决的核心问题是，LLM 的知识在训练完之后就固定了，遇到私有数据或者最新的信息它就答不上来。RAG 的做法是在生成答案之前，先去外部知识库里检索相关内容，然后把检索结果和用户的问题一起交给 LLM，让它基于这些上下文来回答。能够有效避免幻觉.其中md文档提取段落标题等文本信息,使用UnstructuredMarkdownLoader,普通pdf使用pymupdf,对于需要扫描的使用paddleocr.RAG 最核心的价值体现在两点。一是知识可以随时热更新，往知识库里加新文档就行，不需要重新训练模型，成本极低。二是答案有溯源，每条回答都能追溯到来自哪个 chunk，可解释性比纯 LLM 生成强很多，遇到答错了也知道是哪条知识出了问题。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790605224115-trbez",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "大模型或 Agent 连接数据库时，如何防止越权、敏感数据泄漏和查询幻觉？",
+      "briefAnswer": "大模型最好不直接操作数据库。\nLLM 只生成意图和结构化参数。\n通过 Tool → Service → Repository → DB 完成真实查询。\n鉴权、数据权限、脱敏、事务都放在 Service 层。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790604788312-f46fu",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "Multi-Agent 系统如何处理子 Agent 超时、失联和并发修改冲突？",
+      "briefAnswer": "Multi-Agent 系统里，我会把这类问题统一放到 Coordinator/Orchestrator 层处理，而不是让子 Agent 自己兜底。\n对于子 Agent 超时或失联，每个调用都会设置 timeout 和最大重试次数，同时在 Trace 里记录调用状态。如果超时，先有限重试；超过阈值后触发降级，比如切换备用 Agent、跳过非关键步骤，或者直接返回部分结果，避免整个任务被一个 Agent 卡死。\n对于并发修改冲突，我不会让多个 Agent 无约束地直接修改同一份共享状态。通常会采用版本号或者乐观锁，比如 Agent 读取 state.version=10，提交修改时要求版本仍然是10，如果已经变成11，说明其他 Agent 修改过，就拒绝本次提交并重新读取、合并。对于订单、预约这类强一致数据，还可以使用数据库事务、唯一约束或者分布式锁。\n另外，共享状态最好遵循单写多读或者分区写入的原则，比如不同 Agent 只负责修改自己对应的字段，最后由 Coordinator 做 Merge，这样可以从设计层面减少冲突。\n精简答案：\n1. 超时/失联：Timeout + 有限重试 + 熔断 + Fallback，防止单个 Agent 阻塞整个流程。\n2. 状态恢复：关键节点持久化 Checkpoint，失败后可以从最近状态继续执行。\n3. 并发冲突：版本号/乐观锁、事务、唯一约束，必要时使用分布式锁。\n4. 架构治理：尽量单写多读、分区写入，最后由 Coordinator 统一合并状态。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790604378585-u9fqt",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "Agent 的「任务幻觉」是什么？如何避免没有执行工具却声称任务已经完成？",
+      "briefAnswer": "Agent 的任务幻觉，就是模型并没有真正完成外部操作，却在回复里说“已经完成了”。比如用户让 Agent 创建预约，实际上 create_booking 工具没有调用成功，甚至根本没调用，但模型根据对话语义直接回复“预约成功”。\n我一般从三个层面避免。第一，任务状态不能由 LLM 自己判断，像“预约成功”“邮件已发送”这种结果，必须以 Tool 返回值或者数据库状态作为唯一事实来源；第二，在 Agent 状态里明确区分 PLANNED、EXECUTING、SUCCESS、FAILED，只有工具返回成功以后才能进入 SUCCESS，最终回复也只能根据这个状态生成；第三，在 Harness 层做结果校验，如果模型准备输出“已完成”，但 Trace 里没有对应的成功 Tool Call，就直接拦截，改成“操作尚未完成”或者重新执行工具。\n另外我会要求 Tool 返回结构化结果，比如：\nstatus = success\nbooking_id = 1024\n\n而不是只返回一段自然语言，这样程序可以可靠判断执行结果。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790603932027-gznpg",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "如何排查Agent线上延迟过高",
+      "briefAnswer": "线上 Agent 延迟明显升高时，我会先通过 Trace 把一次请求拆成多个阶段看耗时，比如路由判断、LLM 调用、RAG 检索、Tool 调用、数据库访问和最终生成，先定位到底是哪一段变慢，而不是直接看总耗时。\n如果是 LLM 慢，我会看模型调用次数、输入 Token 是否变长、是否发生重复调用；如果是 RAG 慢，就看 Embedding、向量检索、Rerank 各阶段耗时；如果是 Tool 慢，重点看外部 API、数据库和重试次数；如果 Trace 里发现 Agent 路径变长，比如原来 4 步现在变成 8 步，还要排查是否出现重复路由或者无效反思。\n优化上，一般会做几件事：减少不必要的 Agent 和 LLM 调用、压缩上下文、并行执行无依赖步骤、给 RAG 和 Tool 设置超时与降级、对高频结果做缓存，同时限制重试次数。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790603619054-96ryk",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "Agent为什么会出现路径震荡以及重复调用,死循环?如何检测和治理",
+      "briefAnswer": "Agent出现路径震荡、重复调用甚至死循环，本质上是因为路由和状态控制没有收敛机制。比如两个Agent互相认为“这个任务应该交给对方”，就会出现A→B→A→B；或者Tool调用后没有正确更新状态，LLM下一轮仍然认为工具没执行，于是重复调用；还有一种情况是终止条件不明确，只要模型持续生成“继续执行”的决策，整个工作流就不会结束。\n治理上我一般会从状态、次数和语义三个层面做限制。首先在RunTrace里记录每一步的Agent、Tool、参数和状态，如果出现连续相同Agent、相同Tool+相同参数，或者短时间内出现A→B→A这种重复路径，就认为有震荡风险。其次设置硬限制，比如max_steps、单个Tool最大调用次数、Agent最大重入次数和整体超时时间，超过阈值直接终止或降级到兜底Agent。最后做状态机约束，每个节点明确允许的下一跳和终止条件，Tool执行成功后必须写入状态，避免模型重复判断。复杂场景还可以增加Coordinator，让它根据历史Trace判断是否已经完成任务，必要时强制结束。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790603320836-wvs31",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "Agent是如何评估的?",
+      "briefAnswer": "我一般不会只评估 Agent 最终生成的文本，而是把整个 Agent 链路拆开评估。首先是 Understanding 和 Routing，主要看意图识别准确率以及 Agent 路由准确率；第二是 Safety，重点看高风险 Recall；第三是 RAG，通过 HitRate@K、MRR 评估检索效果，再用 Faithfulness、Answer Relevance 评估生成质量；第四是 Tool Calling，看工具选择、参数解析和最终任务完成率；最后再统计延迟、Token 消耗和工具失败率等工程指标。\n评测集方面，我会先按照业务场景建立测试矩阵，然后结合真实匿名日志、人工构造样本、LLM 扩写和边界对抗样本生成测试集。每条 Case 不只是一个问题，还会保存 expected intent、risk level、expected route、expected docs 和 expected tool 等 Ground Truth。结构化结果用规则自动判断，自然语言结果使用 LLM-as-a-Judge，关键安全 Case 再人工抽检。这样就可以通过 Evaluation Harness 做自动回归，每次修改 Prompt、RAG 或 Agent 路由后都能快速判断效果到底提升还是下降。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790602987425-gcepx",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "Agent多轮对话是如何做的?如何保证Agent不跑偏以及出现故障如何恢复?",
+      "briefAnswer": "Agent 的多轮对话状态我一般会拆成三层。第一层是 Conversation State，保存最近几轮消息、历史摘要和必要的长期记忆，保证对话语义连续；第二层是 Task State，明确当前任务目标、意图、已收集参数和当前步骤，保证 Agent 知道自己正在完成什么任务；第三层是 Execution State，记录当前执行节点、已经执行过的 Tool 和 Tool Result，用来支持工作流执行和恢复。\n防止 Agent 跑偏不能只依赖 Prompt，我会通过 System Prompt、显式 Task State 和状态机共同约束。模型主要负责理解用户意图和做语义判断，真正的流程跳转尽量由代码控制，同时对不同 Agent 做 Tool 权限隔离，并限制最大调用轮数。\n中断恢复主要通过 Checkpoint 实现，在关键节点持久化当前 State、执行位置和 Tool Result。服务恢复后，根据 taskId 或 threadId 加载最近的 Checkpoint，从未完成节点继续执行。另外 Tool 调用必须设计幂等，比如使用 taskId + action 作为幂等键，避免恢复以后重复创建订单、预约等副作用操作。\n所以整体就是：Conversation State 保证聊得连贯，Task State 保证目标不跑偏，Execution State + Checkpoint + 幂等保证任务能够可靠恢复。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790602194332-ljiu7",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "Agent上下文工程是怎么做的?",
+      "briefAnswer": "我理解 Agent 的上下文工程，本质上就是在每次调用 LLM 之前，动态决定**模型这一轮到底需要看到哪些信息**，而不是把所有历史信息全部塞进 Context Window。\n\n我一般会把上下文分成几层：第一层是固定的 System Prompt 和 Agent 职责；第二层是最近几轮的短期会话；第三层是通过检索得到的长期记忆；第四层是 RAG 检索出来的外部知识；另外 Agent 场景还会加入当前 Task State、Tool Schema 和必要的 Tool Execution Result。\n\n这里有两个比较重要的工程点。第一个是**上下文压缩**，因为历史会话和工具调用会不断增长，所以可以采用“最近 N 轮原始消息 + 历史摘要”的方式，同时 RAG 和 Memory 都采用按需检索，而不是全量加载。\n\n第二个是**Context Scoping**。在多 Agent 系统里面，不应该让所有 Agent 都看到全部上下文，而是根据职责给不同 Agent 构造不同的 Context。比如 UnderstandingAgent 只需要用户输入和少量历史；SafetyAgent 需要风险规则和相关历史；ContextAgent 负责加载 Memory 和 RAG；最后 ResponseAgent 再拿到经过裁剪和聚合后的上下文生成答案。\n\n另外我还会设计 Context Budget，根据优先级控制 System、安全规则、当前问题、RAG、Memory 和历史消息占用的 Token，超过窗口之后优先做摘要、裁剪和低相关内容淘汰。\n\n所以我认为上下文工程的核心不是单纯扩大 Context Window，而是做到**按需检索、动态组装、压缩裁剪和职责隔离**，让模型每一步只看到完成当前任务真正需要的信息。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790601527971-87o50",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "如何设置多agent的协作",
+      "briefAnswer": "我设计多 Agent 协作时，主要考虑四个方面：**任务编排、通信机制、路由策略和终止条件**。\n\n首先是通信机制，常见有两种。一种是**消息传递**，Agent 之间通过消息、事件总线或者队列通信，不直接共享内部状态，耦合比较低，比较适合异步执行、并行任务或者事件驱动的多 Agent 系统。另一种是**共享状态**，多个 Agent 围绕统一的 State 协作，比如 LangGraph，每个 Agent 读取当前状态，处理之后返回状态增量，由框架统一合并和传递，这种方式更适合步骤依赖比较明确的工作流。\n\n第二是路由。我一般不会完全依赖 LLM 动态决定下一步，因为虽然灵活，但是会增加模型调用成本，而且存在路由不稳定的问题。所以实际工程里我更倾向于采用**静态路由 + 动态路由结合**：正常主链路通过规则或者状态机固定，比如 Understanding → Safety → Response；只有出现复杂意图、工具选择或者异常分支时，再让 Coordinator 或 LLM 动态决定调用哪个 Agent。\n\n最后还需要设计**终止条件和兜底机制**，比如限制最大 Agent 调用轮数、防止 Agent 循环调用，以及某个 Agent 执行失败时降级到默认流程。\n\n所以我理解多 Agent 协作的核心不是简单地“让多个 Agent 互相调用”，而是通过**受控的状态流转和路由机制，把每个 Agent 的职责边界明确下来，同时保证整个流程可控、可观测、可兜底**。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790601518117-w09gu",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "Agent的反思机制",
+      "briefAnswer": "让 Agent 在完成一个步骤或整个任务后，自我评估输出质量，判断有没有问题，不达标就重试或调整策略。\n\n用反思的原因是 LLM 第一次输出不一定是最优的，而且单词llm调用容易出现错误传播,加一轮自我检查能显著提升质量，相当于人写完东西自己再看一遍。\n\n代价是多至少一次 LLM 调用，token 消耗和延迟都会增加，所以我在工程里通常只在质量要求高的关键节点启用反思，不是每步都做。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790581393098-byoro",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "为什么选择手搓Agent?",
+      "briefAnswer": "我的感受是框架用起来快，但有几个实际痛点。\n\n第一是抽象层太多，调试的时候不知道哪步出了问题，得一层层往下扒；第二是版本升级经常有破坏性变更，线上稳定性难保证；第三是框架的通用设计往往和具体业务需求有偏差，定制起来反而更费劲,而且通用的设计会隐藏额外的性能开销。\n\n手搓的代码完全在自己掌控之内，可观测性好、出问题好排查，也更方便做性能优化。所以我现在的策略是核心逻辑手写，只在边缘功能上用框架的工具。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790519783605-u6wa0",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "为什么要设计多Agent，而不是一个Agent？",
+      "briefAnswer": "单Agent在任务比较简单时其实足够，但随着业务复杂度增加，一个Agent同时承担意图识别、知识检索、工具调用、安全判断和回复生成，会导致Prompt越来越复杂，而且不同任务的Context和Tool会互相干扰，同时出现问题后也很难定位是哪一个环节造成的。  \n所以我们采用多Agent，把不同能力拆成职责明确的Agent，例如Understanding负责意图理解，Safety负责风险判断，Context负责记忆和知识检索，Response负责最终生成，再通过Coordinator进行编排。这样不仅降低了单Agent的上下文复杂度，也提高了系统的可观测性、可测试性和安全可控性。常见的多Agent协作模式包括Router、Sequential Pipeline、Supervisor-Worker、Blackboard以及Critic-Reviser，我们项目实际上是几种模式组合使用的。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790519771812-k7bsc",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "什么是多agent",
+      "briefAnswer": "多智能体系统（Multi-Agent）就是多个 Agent 协作完成任务，每个 Agent 各有分工，有的负责搜索、有的负责写代码、有的负责做评审。\n\n我理解单个 Agent 主要受两个限制：一是 context 窗口大小，复杂任务信息量一多就撑爆了；二是单点能力，什么都让一个 Agent 做，每件事都是泛才。\n\nMulti-Agent 通过专业分工和并行执行，能处理更复杂、更长流程的任务，这是我在实际项目里选择多智能体方案的核心原因。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790499128362-x0n00",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "复杂任务怎样做任务拆分?为什么需要做任务拆分",
+      "briefAnswer": "第一层是「为什么拆」：LLM 的 context window 有上限，任务越大中间状态越多、越容易出错，而且拆开后每步可以独立验证和重试。\n第二层是「怎么拆」：静态拆分适合流程固定的场景，直接写死步骤,比如搭建workeflow工作流；动态拆分用 Plan-and-Execute 让 LLM 自己规划，灵活但规划质量不稳定。\n\n第三层是「拆完还要做的事」：分析步骤依赖关系，把能并行的步骤并发跑，关键路径时间可以降 40% 到 60%,理清任务之间的关系有向图。\n\n最后再补一句「粒度把握很重要，以原子操作为标准，既不能太细也不能太粗」",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790314248738-60ri6",
+      "category": "Agent",
+      "proficiency": "生疏",
+      "question": "什么是agent",
+      "briefAnswer": "我理解 Agent 本质上是一个能自主完成目标的 AI 系统，跟传统 AI 最核心的区别在于「自主性」和「能行动」,它实现了感知-规划-行动-再感知的闭环。\n\n一是 Agent 有自主规划能力，给它一个复杂目标它能自己拆解成多步；二是它能行动，通过工具调用跟外部世界真实交互；三是它有闭环，每步的结果会反馈回来指导下一步，而不是一次性生成完就结束。另外还要提一句容易混的点：模型本身只是「大脑」，工具的真正执行是你的代码，模型只负责决策。\n\n传统 AI 是你问一个问题它回答一个问题，每次都是独立的，被动响应；而 Agent 有自己的规划能力，你给它一个复杂目标，它会自己把任务拆成多步，通过调工具、访问记忆、感知环境来一步步执行，直到完成。\n\n它不只是输出文字，而是真的能做事。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790053453545-zeekj",
+      "category": "java",
+      "proficiency": "生疏",
+      "question": "什么是动态代理",
+      "briefAnswer": "动态代理就是在运行时动态生成代理对象，通过代理对象对目标方法进行增强，而不需要修改原来的业务代码。它主要用于把日志、事务、权限校验、监控等公共逻辑从业务代码中抽离出来，是 AOP 的重要实现方式。Java 常见的动态代理有两种，JDK 动态代理主要基于接口，通过 Proxy 和 InvocationHandler 实现；CGLIB 则是通过生成目标类的子类来实现代理。Spring AOP、事务管理、RPC 等场景都会大量使用动态代理。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790053261691-mx7rw",
+      "category": "java",
+      "proficiency": "生疏",
+      "question": "动态代理是什么?它的作用",
+      "briefAnswer": "动态代理就是：程序在运行时动态生成一个代理对象，由代理对象去增强原对象的方法，而不需要修改原对象代码。\n核心作用就是：\n增强功能：在原方法前后加入日志、事务、权限、监控等逻辑。\n解耦公共逻辑：把日志、事务这类通用功能从业务代码里抽出去。\nAOP 的重要实现方式：Spring AOP 就大量使用动态代理。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790053103705-daa8d",
+      "category": "java",
+      "proficiency": "生疏",
+      "question": "什么是反射,它的作用是什么?",
+      "briefAnswer": "程序在运行时，动态获取一个类的信息，并且可以动态创建对象、访问属性、调用方法。\n反射最大的作用是提高程序的动态性和解耦能力，所以在框架中使用非常多，比如 Spring 会通过反射扫描注解、创建 Bean 和进行依赖注入，MyBatis 会通过反射完成数据库字段和 Java 对象之间的映射，Jackson 这类序列化框架也会通过反射创建对象和给字段赋值。缺点主要是性能相对直接调用会低一些，同时也可能破坏封装性。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790052770604-tim3h",
+      "category": "java",
+      "proficiency": "生疏",
+      "question": "什么是泛型以及它的作用",
+      "briefAnswer": "泛型就是把类型参数化，比如 List<String> 中的 String 就是泛型参数。它主要有三个好处：第一是类型安全，可以把很多类型错误从运行阶段提前到编译阶段；第二是减少强制类型转换，代码更简洁；第三是提高代码复用性，一套类、接口或者方法可以适配多种类型。Java 泛型底层主要通过类型擦除实现，泛型信息主要在编译阶段用于类型检查，编译后大部分泛型信息会被擦除。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1790051102862-y4vyz",
+      "category": "java",
+      "proficiency": "生疏",
+      "question": "ConcurrentHashMap的实现原理",
+      "briefAnswer": "ConcurrentHashMap 在 JDK 8 中底层采用 Node 数组加链表和红黑树的数据结构。它的核心思想是降低锁粒度，读操作基本无锁，写操作中如果桶为空就通过 CAS 插入，如果发生 Hash 冲突，就对当前桶的头节点使用 synchronized 加锁，所以不同桶之间可以并发修改。链表过长并满足容量条件时会转换成红黑树。此外，它在扩容时支持多个线程协助迁移，通过 ForwardingNode 标识已经迁移的桶；",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789978578656-d3ra2",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "这个项目的流程",
+      "briefAnswer": "学生端调用 POST /api/chat/stream，ChatService.stream_chat() 调用 MindBridgeAgentHarness.run()。\nHarness 对原始输入做 strip()，并生成脱敏后的 model_input。\nHarness 根据 sessionId 复用会话；没有 sessionId 时新建 ChatSession。\nHarness 调用真正的 Agent runtime，让 runtime 完成记忆读取、意图路由、知识库检索、风险评估和回复 prompt 规划。\nHarness 把用户原始消息保存到业务数据库（线上默认 MySQL；harness/测试可切 SQLite），同时把脱敏后的短期记忆写入 Redis。\n如果 runtime 输出的 intent 不是 CHAT，也就是 CONSULT 或 RISK，Harness 创建 PsychologicalReport；普通聊天不创建报告。\nHarness 保存 trace，记录本轮为什么这样路由、用了哪些知识、评估结果是什么、最终准备了哪些回复消息。\nHarness 生成工具计划。只要有心理报告，就会有工具计划；具体后处理由风险等级决定。\nHarness 把 AgentHarnessOutcome 返回给 ChatService。\nChatService 使用 AiClient.stream(outcome.response_messages) 流式生成最终助手文本，通过 SSE 返回前端。\n流式结束后，ChatService 调 Harness 保存助手消息，再派发工具任务。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789975947258-s0sb1",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "项目开发过程中遇到什么难点",
+      "briefAnswer": "第一个是多 Agent 的协作问题。一开始如果把 Understanding、Safety、Context、Response 这些 Agent 按固定顺序串起来，其实比较像普通工作流，而且后面增加 Agent 时耦合会越来越高。所以我后面采用了事件驱动的共享黑板模式，把任务、Agent 产生的中间结果和事件统一放在 Blackboard 上，每个 Agent 根据自己的 Capability 和 confidence 去 claim 任务，Coordinator 主要负责创建任务、控制执行预算以及最终结果收口。这样增加新的 Agent 时，对原有流程影响会比较小。\n\n第二个难点是心理场景对安全性的要求比较高。不能只让模型生成一次回复就直接返回，因为可能存在高风险信息漏检或者回复本身不合适的问题。所以我做了两层安全控制：首先 SafetyAgent 会对用户输入做风险评估；ResponseAgent 生成候选回复之后，还必须再次经过 SafetyAgent 审核。如果没有通过，就生成 critique，让 ResponseAgent 修改之后重新审核，形成 Critique、Revision、Review 的闭环，高风险情况下还会触发 Safety Override。\n\n第三个是RAG 的召回效果。最开始只使用向量检索时，我发现对于一些像“自杀计划”“失眠”“考试压力”这种关键词比较明显的问题，纯语义检索不一定稳定。所以后来改成 Chroma 向量召回和 BM25 关键词召回两路检索，通过 RRF 做结果融合，再进行 Rerank。为了不是凭感觉判断效果，我还针对自己的知识库构建了 60 条评测数据，通过 Recall@K、MRR、NDCG 和 HitRate 来评估检索质量。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789913953827-y6n1c",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "Agent有自己的私有记忆的作用是什么?",
+      "briefAnswer": "第一，Agent 不需要每轮从零开始理解自己的上一次判断。\n\n第二，不同 Agent 的内部记录不会混在一起。SafetyAgent 的风险记录不会直接塞给 ResponseAgent 当学生端语言，ResponseAgent 的表达策略也不会污染 UnderstandingAgent 的意图判断。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789913659053-n4xbu",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "基础心理skill作用是什么?",
+      "briefAnswer": "质上就是一份 SKILL.md 形式的提示词规范，在生成心理咨询回复时动态加载给 ResponseAgent。\n\n它规定了 6 条核心规则：\n\n先回应用户当前具体的情绪或处境，不要一上来就讲大道理。\n不能随便诊断，不能给用户贴心理疾病标签。\n不能直接给药物建议，也不能把后台的风险分数、风险标签暴露给用户。\n建议要少而具体，通常给 1～2 个可以马上做的行动，而不是列一大堆清单。\n语气温和、不评判，不能否定、争辩或者过度解读用户。\n如果问题持续、严重或者已经影响正常生活，建议联系学校心理中心、咨询师或现实中的可信任的人；最多问一个真正有帮助的追问。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789913550826-7sjjl",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "这个项目包含哪些skill?分别的作用是什么?",
+      "briefAnswer": "supportive_response_baseline：基础心理支持 Skill。规定回复的基本风格和边界，比如先共情、不随便诊断、不直接给药物建议、给出少量可执行建议。可以理解成心理咨询回复的基础规范。\nhigh_risk_safety_plan：高风险安全处理 Skill。检测到自残、自杀、即时危险等高风险情况时使用，重点是优先保证当前安全、联系现实中的支持人员、避免独处、远离危险因素。\nanxiety_grounding_support：焦虑/惊恐支持 Skill。用户出现焦虑、恐慌、崩溃、呼吸紧张等情况时使用，提供呼吸、落地感知、拆分下一步行动等稳定情绪的方法。\nacademic_stress_planning：学业压力 Skill。针对考试、论文、绩点、作业、学习压力等问题，把压力拆成一个具体任务 + 一个时间段 + 一个可完成的小目标。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789912653731-bd5ib",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "ResponseAgent 的作用",
+      "briefAnswer": "综合用户当前问题、UnderstandingAgent 的意图结果、SafetyAgent 的风险结果、ContextAgent 的上下文。\n必要时结合 RAG 检索到的心理知识。\n生成最终的候选回复。\n如果 SafetyAgent 审核不通过， 重新修改回复。\n产出可以被 Coordinator 最终采纳的 response artifact。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789912615013-4hoyj",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "ContextAgent 的作用",
+      "briefAnswer": "获取当前会话的上下文信息。\n从 Redis 读取短期对话记忆。\nRedis 缺失时从 MySQL 回填历史消息。\n整理、压缩上下文，避免对话无限增长。\n给后续 ResponseAgent 提供与当前用户相关的历史背景。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789912492421-csblc",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "SafetyAgent的作用",
+      "briefAnswer": "SafetyAgent 主要负责风险评估和安全审核，作用可以概括成 4 个：\n\n评估风险等级：根据用户输入判断 LOW / MEDIUM / HIGH 等风险级别，并生成风险分数、情绪等结果。\n高风险兜底：如果检测到明显高风险信号，会触发更严格的安全处理，优先保证安全。\n审核候选回复：ResponseAgent 生成回答后，SafetyAgent 会再次检查这条回复是否安全、是否合适。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789912166743-rq8zg",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "UnderstandingAgent怎样做意图识别的?",
+      "briefAnswer": "高风险关键词硬判断：先调用 has_high_risk_signal()，如果包含“自杀、自残、不想活、轻生、kill myself、self harm”等词，直接把意图判成 RISK。\nLLM 意图分类：如果没有命中硬规则，就调用模型，让模型只在 CHAT / CONSULT / RISK 三类里选一个；如果模型返回 RISK，也会把当前意图标成风险类。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789911422827-fbjt0",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "CoordinatorAgent的作用是什么?",
+      "briefAnswer": "CoordinatorAgent 主要就是协调和收口，它自己不负责具体业务处理。\n核心作用有 5 个：\n\n维护任务板：创建根任务、补充缺失任务。\n控制执行预算：限制最大轮数、每轮认领数量、单个 Agent 最大认领次数。\n协调 Agent 工作：不规定固定执行顺序，而是让不同 Agent 根据能力和置信度自主认领任务。\n负责安全门槛：比如候选回复必须经过 SafetyAgent 审核，不通过就触发修改。\n最终采纳结果：只有候选回复通过安全审核、置信度达到阈值后，才把它设置为 final_artifact。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789910923981-r1hpe",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "共享任务版里面有哪些内容，分别的作用是什么",
+      "briefAnswer": "共享任务板 = 任务 Tasks + Agent 消息 Messages + 中间结果 Artifacts + 协作事件 Events + 当前对话上下文。\ntasks：共享任务列表。记录有哪些任务、任务状态、优先级、需要什么能力、被谁认领、依赖哪些任务。\nmessages：Agent 之间的通信消息，比如某个 Agent 向另一个 Agent 请求信息或发送协作内容。\nartifacts：Agent 产生的中间结果，比如理解结果、上下文、风险判断、候选回复、批评意见等。\nevents：整个协作过程的事件日志，比如任务创建、任务认领、结果发布、安全覆盖、最终结果采纳等。",
+      "detailedAnswer": ""
+    },
+    {
+      "id": "card-1789737329982-zkakb",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "为什么你要自己去实现这个上下文管理，不用现成的上下文管理工具？",
+      "briefAnswer": "如果需求只是保留最近几轮消息，使用现成框架就足够了。这个项目自己实现主要是因为上下文管理还有一些业务化需求：首先短期会话放 Redis，Redis 缺失时会从 MySQL 的持久化消息中回填；其次历史比较长时不会简单截断，而是把较早内容压缩成 memory brief，同时保留最近消息，控制 Token 长度；另外心理场景的数据在进入记忆前还会做脱敏。多 Agent 架构下，不同 Agent 还有自己的 Redis 私有记忆，比如 SafetyAgent 和 UnderstandingAgent 不直接共用所有内部状态。所以我这里更准确地说是在通用 Memory 思路上做了一层业务化的 Memory Service，而不是单纯重新实现一个滑动窗口。",
+      "detailedAnswer": "如果需求只是保留最近几轮��息，使用现成框架就足够了。这个项目自己实现主要是因为上下文管理还有一些业务化需求：首先短期会话放 Redis，Redis 缺失时会从 MySQL 的持久化消息中回填；其次历史比较长时不会简单截断，而是把较早内容压缩成 memory brief，同时保留最近消息，控制 Token 长度；另外心理场景的数据在进入记忆前还会做脱敏。多 Agent 架构下，不同 Agent 还有自己的 Redis 私有记忆，比如 SafetyAgent 和 UnderstandingAgent 不直接共用所有内部状态。所以我这里更准确地说是在通用 Memory 思路上做了一层业务化的 Memory Service，而不是单纯重新实现一个滑动窗口。"
+    },
+    {
+      "id": "card-1789736189377-h7llx",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "简要介绍一下这个ai项目",
+      "briefAnswer": "面向校园心理场景开发的多Agent智能体平台，支持意图路由、心理知识检索、风险识别与高风险预警闭环。系统基于事件驱动多Agent runtime实现，并通过Agent Runtime Harness统一处理输入脱敏、agent调用、工具后处理、报告落库与run trace。\n\n这个项目链路分为两部分,第一部分是学生端发起流式对话,第二部分是后台风险闭环。\n学生在前端发消息，请求打到 POST /api/chat/stream。接口层做身份识别，管理员账号不能发起学生对话。然后进入 ChatService.stream_chat()，它先调用 CoreAgentHarness.run() 完成本轮 Agent 运行准备。\n\nHarness 里先对用户输入做 strip() 和隐私脱敏，脱敏字段包括手机号、邮箱、身份证号。然后解析或创建 ChatSession，再创建 事件驱动多 Agent runtime，也就是 CoordinatorAgent 创建任务，UnderstandingAgent 产出意图 artifact，SafetyAgent 做风险评估和候选安全审查，ContextAgent 负责记忆、RAG 和 Skill 上下文，ResponseAgent 产出候选回复 prompt，最后由 CoordinatorAgent 在安全审查通过后采纳最终回复。",
+      "detailedAnswer": "面向校园心理场景开发的多Agent智能体平台，支持意图路由、心理知识检索、风险识别与高风险预警闭环。系统基于事件驱动多Agent runtime实现，并通过Agent Runtime Harness统一处理输入脱敏、agent调用、工具后处理、报告落库与run trace。\n\n这个项目链路分为两部分,第一部分是学生端发起流式对话,第二部分是后台风险闭环。\n学生在前端发消息，请求打到 POST /api/chat/stream。接口层做身份识别，管理员账号不能发起学生对话。然后进入 ChatService.stream_chat()，它先调用 CoreAgentHarness.run() 完成本轮 Agent 运行准备。\n\nHarness 里先对用户输入做 strip() 和隐私脱敏，脱敏字段包括手机号、邮箱、身份证号。然后解析或创建 ChatSession，再创建 事件驱动多 Agent runtime，也就是 CoordinatorAgent 创建任务，UnderstandingAgent 产出意图 artifact，SafetyAgent 做风险评估和候选安全审查，ContextAgent 负责记忆、RAG 和 Skill 上下文，ResponseAgent 产出候选回复 prompt，最后由 CoordinatorAgent 在安全审查通过后采纳最终回复。"
+    },
+    {
+      "id": "card-1789723618022-4lr9b",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "为什么会选择删除缓存，而不是直接更新缓存",
+      "briefAnswer": "避免并发更新导致脏数据：多个线程同时更新数据库和缓存时，直接更新缓存更容易发生旧值覆盖新值。\n删除更简单、更可靠：只需要通知“这个 key 失效了”，不用把完整新数据通过 MQ 广播给所有实例。\n按需重建：删除后，下一次请求再从 Redis 或 MySQL 加载最新数据，可以保证缓存最终回到最新状态。",
+      "detailedAnswer": "避免并发更新导致脏数据：多个线程同时更新数据库和缓存时，直接更新缓存更容易发生旧值覆盖新值。\n删除更简单、更可靠：只需要通知“这个 key 失效了”，不用把完整新数据通过 MQ 广播给所有实例。\n按需重建：删除后，下一次请求再从 Redis 或 MySQL 加载最新数据，可以保证������存最终回到最新状态。"
+    },
+    {
+      "id": "card-1789723373101-zpfpk",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "你在项目里用了 Caffeine + Redis 多级缓存,那 Redis 已经很快了,为什么还要再加一层本地缓存?另外,多实例部署的时候,每个实例都有自己的本地缓存,这个一致性问题你准备怎么处理?",
+      "briefAnswer": "edis 已经很快，但它毕竟还是远程缓存，访问一次仍然有网络 IO；Caffeine 是进程内本地缓存，直接读 JVM 内存，速度更快，而且还能进一步保护 Redis。\n\n多实例下，本地缓存一致性我会这样处理：\n\n读请求：先查 Caffeine，没命中再查 Redis，再没命中查 MySQL。\n数据更新：先更新 MySQL，再删除 Redis。\n本地缓存失效：通过 RabbitMQ 发布一条“缓存失效消息”。\n每个实例都收到消息后执行 invalidate(key)，删除各自的 Caffeine 缓存。\n再用 TTL 做最终兜底，防止极端情况下失效消息没处理成功。",
+      "detailedAnswer": "edis 已经很快，但它毕竟还是远程缓存，访问一次仍然有网络 IO；Caffeine 是进程内本地缓存，直接读 JVM 内存，速度更快，而且还能进一步保护 Redis。\n\n多实例下，本地缓存一致性我会这样处理：\n\n读请求：先查 Caffeine，没命中再查 Redis，再没命中查 MySQL。\n数据更新：先更新 MySQL，再删除 Redis。\n本地缓存失效：通过 RabbitMQ 发布一条“缓存失效消息”。\n每个实例都收到消息后执行 invalidate(key)，删除各自的 Caffeine 缓存。\n再用 TTL 做最终兜底，防止极端情况下失效消息没处理成功。"
+    },
+    {
+      "id": "card-1789723080766-4eexi",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "消息已经成功发送到 RabbitMQ 了,如果这个时候服务器突然宕机,消息会不会丢?你要怎么保证服务器宕机以后消息还能恢复?",
+      "briefAnswer": "如果消息只是放在 RabbitMQ 内存里，服务器宕机后可能丢失。要保证重启后还能恢复，主要做两件事：\n\nQueue 设置为 durable：RabbitMQ 重启后队列本身还能恢复。\n消息设置为 persistent：消息会持久化到磁盘，Broker 重启后可以重新加载。\n\n另外：\n\nExchange 通常也设置为 durable，保证交换机重启后还存在。",
+      "detailedAnswer": "如果消息只是放在 RabbitMQ 内存里，服务器宕机后可能丢失。要保证重启后还能恢复，主要做两件事：\n\nQueue 设置为 durable：RabbitMQ 重启后队列本身还能恢复。\n消息设置为 persistent：消息会持久化到磁盘，Broker 重启后可以重新加载。\n\n另外：\n\nExchange 通常也设置为 durable，保证交换机重启后还存在。"
+    },
+    {
+      "id": "card-1789722841963-163mb",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "生产者这边代码调用发送消息,但是网络抖动,你也不确定消息到底有没有到 RabbitMQ ,这种“不确定”的情况你怎么确认消息到底到没到 RabbitMQ 呢? RabbitMQ 自己有没有提供什么机制来解决这个问题呢?你想一下。",
+      "briefAnswer": "RabbitMQ 专门提供了 Publisher Confirm（发布确认）机制解决这个问题。\n\n生产者开启 Confirm 模式，发送消息后不会只凭“代码执行成功”判断，而是等 RabbitMQ 返回确认。\nRabbitMQ 成功接管消息后返回 ack；处理失败时可能返回 nack。对于持久化消息发往 durable queue，Confirm 通常是在消息完成相应持久化要求后才返回。\n最关键的一点：如果网络断了，生产者一直没收到 ack，这条消息仍然是“不确定”的——可能消息没到，也可能 RabbitMQ 已经收到了，只是 ack 在回程路上丢了。\n所以对于没有收到 Confirm 的消息，要重新发送；这样可能造成重复消息，因此消费者必须做幂等。RabbitMQ 官方也明确建议连接失败后重发未确认消息，并处理潜在重复。",
+      "detailedAnswer": "RabbitMQ 专门提供了 Publisher Confirm（发布确认）机制解决这个问题。\n\n生产者开启 Confirm 模式，发送消息后不会只凭“代码执行成功”判断，而是等 RabbitMQ 返回确认。\nRabbitMQ 成功接管消息后返回 ack；处理失败时可能返回 nack。对于持久化消息发往 durable queue，Confirm 通常是在消息完成相应持久化要求后才返回。\n最关键的一点：如果网络断了，生产者一直没收到 ack，这条消息仍然是“不确定”的——可能消息没到，也可能 RabbitMQ 已经收到了，只是 ack 在回程路上丢了。\n所以对于没有收到 Confirm 的消息，要重新发送；这样可能造成重复消息，因此消费者必须做幂等。RabbitMQ 官方也明确建议连接失败后重发未确认消息，并处理潜在重复。"
+    },
+    {
+      "id": "card-1789722459813-shncf",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "从生产者发出一条消息开始,到消费者最终处理完成,中间有哪些环节可能导致消息丢失,你分别怎么保证?",
+      "briefAnswer": "一条 RabbitMQ 消息从生产者到消费者，主要有 3 个位置可能丢失：\n\n生产者 → RabbitMQ\n网络异常，消息根本没到 Broker。\n用 Publisher Confirm 确认 Broker 是否收到，失败就重试。\n如果消息到了 Exchange 但没有路由到 Queue，用 mandatory + Return 机制发现。\nRabbitMQ 自身\nBroker 宕机后，内存里的消息可能丢失。\nExchange、Queue 持久化 + 消息 persistent。\n更高可用场景可以使用 Quorum Queue 做多副本。\nRabbitMQ → 消费者\n消息刚发给消费者，消费者还没处理完就宕机。\n使用 手动 ACK，业务处理成功以后再 ack。\n失败就 nack/requeue 重试，多次失败进入 死信队列 DLQ。\n\n再补一个重点：\n\n可靠投递通常是“至少一次”，因此消费者必须做幂等，防止重试造成重复消费。",
+      "detailedAnswer": "一条 RabbitMQ 消息从生产者到消费者，主要有 3 个位置可能丢失：\n\n生产者 → RabbitMQ\n网络异常，消息根本没到 Broker。\n用 Publisher Confirm 确认 Broker 是否收到，失败就重试。\n如果消息到了 Exchange 但没有路由到 Queue，用 mandatory + Return 机制发现。\nRabbitMQ 自身\nBroker 宕机后，内存里的消息可能丢失。\nExchange、Queue 持久化 + 消息 persistent。\n更高可用场景可以使用 Quorum Queue 做多副本。\nRabbitMQ → 消费者\n消息刚发给消费者，消费者还没处理完就宕机。\n使用 手动 ACK，业务处理成功以后再 ack。\n失败就 nack/requeue 重试，多次失败进入 死信队列 DLQ。\n\n再补一个重点：\n\n可靠投递通常是“至少一次”，因此消费者必须做幂等，防止重试造成重复消费。"
+    },
+    {
+      "id": "card-1789721954570-7qrm7",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "HashMap 的底层结构是什么?在什么情况下会发生树化?",
+      "briefAnswer": "HashMap 在 JDK 8 之后底层是：\n\n数组 + 链表 + 红黑树。\n\n树化需要同时满足两个条件：\n\n某个桶里的链表长度达到 8\nHashMap 数组容量至少达到 64\n\n如果链表长度达到 8，但数组容量还小于 64，不会直接树化，而是优先扩容。\n\n另外，当红黑树节点数减少到一定程度时，会退化回链表，通常记成 6。",
+      "detailedAnswer": "JDK 8 之后，HashMap 的底层结构是数组加链表加红黑树。首先根据 key 的 hash 值计算它在数组中的下标，如果发生 hash 冲突，就会把节点挂到同一个桶里。\n\n默认情况下桶内使用链表存储，当某个桶中的链表长度达到 8，并且当前数组容量已经达到 64 时，这个链表会转换成红黑树，这样查询复杂度可以从最坏的 O(n) 优化到 O(log n)。\n\n如果链表长度已经达到 8，但数组容量还没有达到 64，HashMap 不会马上树化，而是优先进行扩容，因为这时候通过扩容重新分散节点，通常比直接树化更合适。\n\n后续如果红黑树中的节点数量减少到 6 左右，还会重新退化成链表。"
+    },
+    {
+      "id": "card-1789721646932-619za",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "Redis预扣库存成功以后,如果后面消息队列发送失败了,库存怎么处理?",
+      "briefAnswer": "Redis 预扣库存成功后，如果 RabbitMQ 消息发送失败，核心就是做库存补偿：\n\n生产者开启 RabbitMQ Publisher Confirm，确认消息是否真正到达 Broker。\n如果明确发送失败，进行重试。\n多次重试仍失败，就执行一段补偿 Lua：\nINCR 把 Redis 库存加回来；\nSREM 删除该用户的一人一单记录。\n补偿也要用 Lua，保证“库存回补 + 删除购买标记”原子执行。",
+      "detailedAnswer": "我的秒杀流程是先通过 Redis + Lua 预扣库存，然后再发送 RabbitMQ 消息异步创建订单，所以这里确实存在一个问题：Redis 扣成功了，但是 MQ 消息可能发送失败。\n\n我的处理方式是生产端开启 RabbitMQ 的 Publisher Confirm，判断消息有没有成功到达 Broker。如果发送失败，我会先进行有限次数重试。\n\n如果多次重试之后仍然确定发送失败，就执行补偿逻辑，把之前预扣的 Redis 库存加回来，同时把 Redis Set 中这个用户的购买记录删除，这两个操作同样通过 Lua 原子执行。\n\n比如原来库存从 10 扣成了 9，用户 ID 也写进了购买集合，但消息最终没发出去，这时候补偿脚本就执行 INCR，把库存恢复成 10，同时执行 SREM，这样用户之后还可以重新参与秒杀。\n\n不过这里还有一个细节：如果只是没有收到 Confirm，不能立刻认为消息一定没发送成功，因为也可能是消息已经到了 RabbitMQ，只是确认丢了。所以这种情况更适合先重试，并且消费端做好幂等，而不是直接回滚库存。"
+    },
+    {
+      "id": "card-1789720708763-8rwl4",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "Redis 加 Lua脚本,你能具体讲讲为什么要这么设计,以及怎么避免超卖和一人一单吗?",
+      "briefAnswer": "Redis + Lua 主要解决两个问题：\n\n抗高并发：先在 Redis 里判断库存和购买资格，避免大量请求直接打 MySQL。\n防超卖：把“判断库存 + 扣库存”放进同一个 Lua 脚本里原子执行，避免多个请求同时读到还有库存。\n一人一单：Lua 里先判断用户是否已经买过，没有才扣库存并记录用户。\n数据库兜底：最终下单到 MySQL 时，再通过 user_id + voucher_id 唯一索引防止极端情况下重复下单。",
+      "detailedAnswer": "我这里使用 Redis + Lua，主要是因为秒杀场景并发比较高，如果每个请求都直接查 MySQL 判断库存和是否重复下单，数据库压力会比较大，同时还容易出现并发问题。\n\n所以我把库存和用户购买状态前置到 Redis，在 Lua 脚本里一次完成库存判断、重复购买判断、库存扣减和用户记录。Lua 的好处是这些操作可以原子执行，中间不会被其他请求插入。\n\n比如库存只剩 1 个，两个请求同时进来，第一个 Lua 脚本先把库存从 1 扣成 0，第二个请求再执行时就会发现库存不足，因此不会出现超卖。\n\n一人一单也是类似，我会用 Redis Set 记录已经购买过的用户，Lua 里先通过 SISMEMBER 判断用户是否存在，如果已经买过就直接拒绝，没有买过才执行 DECR 扣库存，并通过 SADD 记录这个用户。\n\nRedis 校验成功后，再发送 RabbitMQ 消息异步创建订单。数据库层面我还会对 user_id + voucher_id 建唯一索引，作为最后一道兜底，防止消息重复消费等异常情况导致重复订单。"
+    },
+    {
+      "id": "card-1789650022631-cpx1e",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "为什么用 Redis 存对话，而不是直接存在内存或者 MySQL？",
+      "briefAnswer": "Redis 读写快、天然支持 TTL、多实例共享；本地内存无法跨实例，MySQL 更适合长期持久化而非高频上下文读取 \n对话上下文属于一种高频读写、短生命周期、需要跨实例共享的数据",
+      "detailedAnswer": "Redis 读写快、天然支持 TTL、多实例共享；本地内存无法跨实例，MySQL 更适合长期持久化而非高频上下文读取 \n对话上下文属于一种高频读写、短生命周期、需要跨实例共享的数据"
+    },
+    {
+      "id": "card-1789649857370-vdc8q",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "LangChain4j 本身不是有 ChatMemory 吗？为什么你还自己 Redis 存最近 N 轮",
+      "briefAnswer": "保存会话记忆，服务重启后记忆不会丢\n支持多实例部署，Redis 可以作为共享会话存储\n方便做 Session 生命周期管理，用户长时间不聊天就自动过期，也方便主动删除会话。",
+      "detailedAnswer": "保存会话记忆，服务重启后记忆不会丢\n支持多实例部署，Redis 可以作为共享会话存储\n方便做 Session 生命周期管理，用户长时间不聊天就自动过期，也方便主动删除会话。"
+    },
+    {
+      "id": "card-1789649118227-ktxc8",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "Function Calling 在你项目里具体怎么实现？",
+      "briefAnswer": "在我的项目里，Function Calling 是基于 LangChain4j + DeepSeek 实现的。我把商家查询、商家详情、到店预约这些业务能力封装成 Java 方法，通过 @Tool 声明成大模型可以调用的工具，然后在构建 AI Service 时统一注册进去。用户请求进来以后，DeepSeek 根据用户意图判断是否需要调用工具，并生成对应的 Tool Name 和参数，LangChain4j 再自动映射到具体的 Java 方法，最终由 Service 层查询 MySQL、Redis 或创建预约。工具执行结果返回给大模型后，再由模型组织成自然语言回复。",
+      "detailedAnswer": "在我的项目里，Function Calling 是基于 LangChain4j + DeepSeek 实现的。我把商家查询、商家详情、到店预约这些业务能力封装成 Java 方法，通过 @Tool 声明成大模型可以调用的工具，然后在构建 AI Service 时统一注册进去。用户请求进来以后，DeepSeek 根据用户意图判断是否需要调用工具，并生成对应的 Tool Name 和参数，LangChain4j 再自动映射到具体的 Java 方法，最终由 Service 层查询 MySQL、Redis 或创建预约。工具执行结果返回给大模型后，再由模型组织成自然语言回复。"
+    },
+    {
+      "id": "card-1789648814319-v8lbv",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "Function Calling 是什么？为什么不用让大模型直接回答？",
+      "briefAnswer": "Function Calling 是一种让大模型调用外部工具或后端函数的机制。大模型主要负责理解用户意图和生成调用参数，真正的数据查询和业务操作还是由后端完成。比如用户说“帮我预约今晚 7 点的餐厅”，模型会识别需要调用预约函数，提取时间、人数等参数，后端真正完成预约，然后把结果返回给模型组织回复。之所以不能完全让大模型直接回答，是因为大模型不知道实时业务数据，也不能真正修改数据库，而且直接回答容易产生幻觉。所以可以理解成：LLM 负责决策，Function 负责执行。\n\n精简答案：Function Calling = 让大模型从“只会说”变成“能够调用系统能力做事”，但真正执行的仍然是后端。",
+      "detailedAnswer": "Function Calling 是一种让大模型调用外部工具或后端函数的机制。大模型主要负责理解用户意图和生成调用参数，真正的数据查询和业务操作还是由后端完成。比如用户说“帮我预约今晚 7 点的餐厅”，模型会识别需要调用预约函数，提取时间、人数等参数，后端真正完成预约，然后把结果返回给模型组织回复。之所以不能完全让大模型直接回答，是因为大模型不知道实时业务数据，也不能真正修改数据库，而且直接回答容易产生幻觉。所以可以理解成：LLM 负责决策，Function 负责执行。\n\n精简答案：Function Calling = 让大模型从“只会说”变成“能够调用系统能力做事”，但真正执行的仍然是后端。"
+    },
+    {
+      "id": "card-1789648563673-wtsbd",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "你这个智能客服整体流程是怎样的？",
+      "briefAnswer": "用户问题 → 查询 Redis 历史上下文 → 拼接 Prompt → DeepSeek 判断是否调用工具 → Function Calling → 后端执行商家查询/预约 → 工具结果返回模型 → 生成最终回答",
+      "detailedAnswer": "用户问题 → 查询 Redis 历史上下文 → 拼接 Prompt → DeepSeek 判断是否调用工具 → Function Calling → 后端执行商家查询/预约 → 工具结果返回模型 → 生成最终回答"
+    },
+    {
+      "id": "card-1789647492691-noviz",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "Function Calling 跟 MCP 的区别与联系",
+      "briefAnswer": "Function Calling 和 MCP 都和 Agent 工具调用有关，但层次不一样。Function Calling 是模型层面的工具调用机制，主要解决模型如何根据用户请求选择函数并生成结构化参数；MCP 是工具接入层的标准协议，主要解决外部工具、数据源如何以统一方式接入 AI 应用。实际项目中两者通常结合使用，比如 MCP Server 暴露工具，Agent Runtime 获取这些工具后转换成 Tool Schema 提供给大模型，大模型再通过 Function Calling 选择具体工具，最后 Runtime 通过 MCP 调用对应 Server。所以一句话就是：Function Calling 解决“怎么调用”，MCP 解决“怎么接入”。",
+      "detailedAnswer": "Function Calling 和 MCP 都和 Agent 工具调用有关，但层次不一样。Function Calling 是模型层面的��具调用机制，主要解决模型如何根据用户请求选择函数并生成结构化参数；MCP 是工具接入层的标准协议，主要解决外部工具、数据源如何以统一方式接入 AI 应用。实际项目中两者通常结合使用，比如 MCP Server 暴露工具，Agent Runtime 获取这些工具后转换成 Tool Schema 提供给大模型，大模型再通过 Function Calling 选择具体工具，最后 Runtime 通过 MCP 调用对应 Server。所以一句话就是：Function Calling 解决“怎么调用”，MCP 解决“怎么接入”。"
+    },
+    {
+      "id": "card-1789638377506-zkrn2",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "滑动窗口具体是怎样实现的",
+      "briefAnswer": "我项目里的接口限流是通过 Redis + AOP + 自定义注解实现的。需要限流的接口只需要加 @RateLimit，配置时间窗口、最大请求次数以及 GLOBAL、IP、USER 等限流维度。请求进入后 AOP 会读取注解，根据接口和用户 ID 或 IP 生成 Redis Key。底层使用 Redis ZSET 实现滑动窗口，通过时间戳清理窗口外的请求并统计当前窗口请求数，这几个操作通过 Lua 脚本保证原子性。如果超过阈值就直接在业务执行之前拒绝请求。主要用于秒杀刷券、防爬以及突发流量保护。",
+      "detailedAnswer": "我项目里的接口限流是通过 Redis + AOP + 自定义注解实现的。需要限流的接口只需要加 @RateLimit，配置时间窗口、最大请求次数以及 GLOBAL、IP、USER 等限流维度。请求进入后 AOP 会读取注解，根据接口和用户 ID 或 IP 生成 Redis Key。底层使用 Redis ZSET 实现滑动窗口，通过时间戳清理窗口外的请求并统计当前窗口请求数，这几个操作通过 Lua 脚本保证原子性。如果超过阈值就直接在业务执行之前拒绝请求。主要用于秒杀刷券、防爬以及突发流量保护。"
+    },
+    {
+      "id": "card-1789637681663-xmc2n",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "在这个项目中，你的滑动窗口具体是怎样实现的",
+      "briefAnswer": "我的滑动窗口是通过 Redis ZSet 加 Lua 实现的。ZSet 的 score 保存请求时间戳，每次请求进来后，Lua 先通过 ZREMRANGEBYSCORE 删除当前时间窗口之前的记录，再通过 ZCARD 获取最近 window 秒内的请求数量。如果数量小于 limit，就通过 ZADD 记录当前请求并刷新 TTL；如果已经达到 limit，就返回 0，由 AOP 直接拒绝当前请求。之所以使用 Lua，是因为删除旧数据、统计、判断和写入必须保证原子性，否则高并发下多个线程可能同时判断未达到阈值，造成限流失效。",
+      "detailedAnswer": "我的滑动窗口是通过 Redis ZSet 加 Lua 实现的。ZSet 的 score 保存请求时间戳，每次请求进来后，Lua 先通过 ZREMRANGEBYSCORE 删除当前时间窗口之前的记录，再通过 ZCARD 获取最近 window 秒内的请求数量。如果数量小于 limit，就通过 ZADD 记录当前请求并刷新 TTL；如果已经达到 limit，就返回 0，由 AOP 直接拒绝当前请求。之所以使用 Lua，是因为删除旧数据、统计、判断和写入必须保证原子性，否则高并发下多个线程可能同时判断未达到阈值，造成限流失效。"
+    },
+    {
+      "id": "card-1789635432328-yewdj",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "实现限流的 四种算法：固定窗口、滑动窗口、漏桶、令牌桶的区别",
+      "briefAnswer": "| 算法       | 核心思想                  | 最大特点            | 主要问题           |\n| -------- | --------------------- | --------------- | -------------- |\n| **固定窗口** | 固定时间段内统计请求数           | 最简单、性能高         | 窗口边界可能出现瞬时双倍流量 |\n| **滑动窗口** | 统计“当前时间往前一段时间”的请求数    | 比固定窗口更平滑、准确     | 实现和存储成本更高      |\n| **漏桶**   | 请求先进桶，再以**固定速度**流出    | 强制把流量削平         | 不适合突发流量        |\n| **令牌桶**  | 系统固定速度生成令牌，请求拿到令牌才能通过 | 限制平均速率，同时允许一定突发 | 实现稍复杂          |",
+      "detailedAnswer": "| 算法       | 核心思想                  | 最大特点            | 主要问题           |\n| -------- | --------------------- | --------------- | -------------- |\n| **固定窗口** | 固定时间段内统计请求数           | 最简单、性能高         | 窗口边界可能出现瞬时双倍流量 |\n| **滑动窗口** | 统计“当前时间往前一段时间”的请求数    | 比固定窗口更平滑、准确     | 实现和存储成本更高      |\n| **漏桶**   | 请求先进桶，再以**固定速度**流出    | 强制把流量削平         | 不适合突发流量        |\n| **令牌桶**  | 系统固定速度生成令牌，请求拿到令牌才能通过 | 限制平均速率，同时允许一定突发 | 实现稍复杂          |"
+    },
+    {
+      "id": "card-1789633456022-40dat",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "如果项目已经使用了redis还有本地caffeine构建了多级缓存了，并发能力应该很高，还有必要使用滑动窗口进行限流吗？",
+      "briefAnswer": "有必要。我在项目里使用 Caffeine + Redis 多级缓存，主要是为了提升查询性能，减少 Redis 和 MySQL 的访问压力，它解决的是“请求进来以后怎么更快处理”。但是限流解决的是“请求要不要放进来”。比如秒杀或者热点接口短时间流量突然暴增，就算数据都能命中缓存，请求本身还是会占用线程、网络连接、CPU 和 Redis 连接池，流量过大一样可能把服务打满。所以我还会用滑动窗口限流，对用户、IP 或接口 QPS 做限制，防止恶意刷接口和瞬时流量冲击。简单来说，多级缓存是提高系统的承载上限，限流是防止流量超过这个上限，两者是互补的。",
+      "detailedAnswer": "有必要。我在项目里使用 Caffeine + Redis 多级缓存，主要是为了提升查询性能，减少 Redis 和 MySQL 的访问压力，它解决的是“请求进来以后怎么更快处理”。但是限流解决的是“请求要不要放进来”。比如秒杀或者热点接口短时间流量突然暴增，就算数据都能命中缓存，请求本身还是会占用线程、网络连接、CPU 和 Redis 连接池，流量过大一样可能把服务打满。所以我还会用滑动窗口限流，对用户、IP 或接口 QPS 做限制，防止恶意刷接口和瞬时流量冲击。简单来说，多级缓存是提高系统的承载上限，限流是防止流量超过这个上限，两者是互补的。"
+    },
+    {
+      "id": "card-1789574609244-l6kp4",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "本地缓存存在多实例一致性问题  ，具体来说怎么样处理的呢？",
+      "briefAnswer": "Caffeine 是 JVM 本地缓存，所以多实例部署时，每个实例都有自己独立的缓存。一个实例更新数据并清理自己的 Caffeine，并不能清理其他实例的缓存。我的处理方式是更新 MySQL 后删除 Redis 和当前实例的 Caffeine，然后通过 RabbitMQ 发布缓存失效事件，各个实例分别监听自己的队列，收到消息后执行 invalidate 清理本地缓存。这里可以使用 Fanout Exchange 做广播，避免普通竞争消费导致只有一个实例收到消息。另外 Caffeine 和 Redis 都设置 TTL，作为消息丢失等异常情况下的最终兜底。",
+      "detailedAnswer": "Caffeine 是 JVM 本地缓存，所以多实例部署时，每个实例都有自己独立的缓存。一个实例更新数据并清理自己的 Caffeine，并不能清理其他实例的缓存。我的处理方式是更新 MySQL 后删除 Redis 和当前实例的 Caffeine，然后通过 RabbitMQ 发布缓存失效事件，各个实例分别监听自己的队列，收到消息后执行 invalidate 清理本地缓存。这里可以使用 Fanout Exchange 做广播，避免普通竞争消费导致只有一个实例收到消息。另外 Caffeine 和 Redis 都设置 TTL，作为消息丢失等异常情况下的最终兜底。"
+    },
+    {
+      "id": "card-1789574366487-f5d3e",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "多级缓存，redis明明已经实现的高并发下的缓存，为什么还需要本地的caffeine",
+      "briefAnswer": "Redis 虽然性能很高，但它仍然属于远程缓存，每次访问都需要网络 IO。在高并发热点场景下，如果所有请求都访问 Redis，Redis 本身也可能成为瓶颈。所以我在 Redis 前面增加了一层 Caffeine 本地缓存，对于热点且更新频率较低的数据，优先从 JVM 内存读取，可以进一步降低访问延迟，同时减少 Redis 的 QPS。整体采用 Caffeine 一级缓存、Redis 二级缓存、MySQL 数据库的多级缓存结构。它的代价是本地缓存存在多实例一致性问题，所以数据更新时需要通过缓存失效机制和 TTL 来保证最终一致性。",
+      "detailedAnswer": "Redis 虽然性能很高，但它仍然属于远程缓存，每次访问都需要网络 IO。在高并发热点场景下，如果所有请求都访问 Redis，Redis 本身也可能成为瓶颈。所以我在 Redis 前面增加了一层 Caffeine 本地缓存，对于热点且更新频率较低的数据，优先从 JVM 内存读取，可以进一步降低访问延迟，同时减少 Redis 的 QPS。整体采用 Caffeine 一级缓存、Redis 二级缓存、MySQL 数据库的多级缓存结构。它的代价是本地缓存存在多实例一致性问题，所以数据更新时需要通过缓存失效机制和 TTL 来保证最终一致性。"
+    },
+    {
+      "id": "card-1789573981991-zafl0",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "在你这个项目中，怎么样保证数据的一致性",
+      "briefAnswer": "我项目里的数据一致性主要分两个层面。\n第一是订单链路的一致性，秒杀时通过 Redis + Lua 原子预扣库存，再通过 RabbitMQ 异步创建 MySQL 订单，通过 MQ 重试、消费者幂等、数据库唯一索引以及订单取消后的库存补偿，保证 Redis、MQ 和 MySQL 的最终一致性。同时支付和关单通过 where status = 待支付 的条件更新避免并发状态冲突。\n\n第二是缓存和数据库的一致性。因为项目里使用了 Caffeine 本地缓存 + Redis 二级缓存 + MySQL，所以采用 Cache Aside 模式，写操作先更新 MySQL，再删除 Redis 和 Caffeine 缓存。删除失败时通过 RabbitMQ 补偿重试，同时 Redis 和 Caffeine 设置 TTL 兜底；如果是多实例部署，还可以通过 MQ 广播缓存失效消息，让其他实例同时清理本地 Caffeine，从而保证三级数据的最终一致性。",
+      "detailedAnswer": "我项目里的数据一致性主要分两个层面。\n第一是订单链路的一致性，秒杀时通过 Redis + Lua 原子预扣库存，再通过 RabbitMQ 异步创建 MySQL 订单，通过 MQ 重试、消费者幂等、数据库唯一索引以及订单取消后的库存补偿，保证 Redis、MQ 和 MySQL 的最终一致性。同时支付和关单通过 where status = 待支付 的条件更新避免并发状态冲突。\n\n第二��缓存和数据库的一致性。因为项目里使用了 Caffeine 本地缓存 + Redis 二级缓存 + MySQL，所以采用 Cache Aside 模式，写操作先更新 MySQL，再删除 Redis 和 Caffeine 缓存。删除失败时通过 RabbitMQ 补偿重试，同时 Redis 和 Caffeine 设置 TTL 兜底；如果是多实例部署，还可以通过 MQ 广播缓存失效消息，让其他实例同时清理本地 Caffeine，从而保证三级数据的最终一致性。"
+    },
+    {
+      "id": "card-1789569629484-bjzqo",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "如何保证数据的一致性",
+      "briefAnswer": "具体来说，订单支付和超时关单可能并发执行，所以我会通过 where id = ? and status = 待支付 做条件更新，保证订单只能从“待支付”变成“已支付”或者“已取消”其中一种状态，避免状态被覆盖。对于 Redis 和 MySQL 之间，因为秒杀时是先在 Redis 预扣库存，再通过 RabbitMQ 异步创建订单，所以这里很难做到严格强一致，我采用的是最终一致性：MQ 开启发送确认和持久化，消费者创建订单时使用本地事务；如果消费失败就重试，超过次数进入死信队列。同时消费者根据订单 ID 或 user_id + voucher_id 做幂等，避免重复创建订单。如果订单超时取消，则通过补偿逻辑把 Redis 库存和购买标记恢复。",
+      "detailedAnswer": "具体来说，订单支付和超时关单可能并发执行，所以我会通过 where id = ? and status = 待支付 做条件更新，保证订单只能从“待支付”变成“已支付”或者“已取消”其中一种状态，避免状态被覆盖。对于 Redis 和 MySQL 之间，因为秒杀时是先在 Redis 预扣库存，再通过 RabbitMQ 异步创建订单，所以这里很难做到严格强一致，我采用的是最终一致性：MQ 开启发送确认和持久化，消费者创建订单时使用本地事务；如果消费失败就重试，超过次数进入死信队列。同时消费者根据订单 ID 或 user_id + voucher_id 做幂等，避免重复创建订单。如果订单超时取消，则通过补偿逻辑把 Redis 库存和购买标记恢复。"
+    },
+    {
+      "id": "card-1789568777508-sgr5e",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "如何实现支付和关单并发控制",
+      "briefAnswer": "支付和关单可能存在并发竞争，比如用户刚好在超时时刻完成支付，同时定时任务也准备关闭订单。我这里采用乐观锁思想，在更新订单状态时不仅根据订单 ID，还会带上当前状态条件。支付时执行 status=0 → status=1，关单时执行 status=0 → status=2。因为两个操作都要求原状态必须是待支付，所以并发情况下只有一个更新能成功，从而避免“已支付订单被关单”或者“已取消订单又被支付”的问题。",
+      "detailedAnswer": "支付和关单可能存在并发竞争，比如用户刚好在超时时刻完成支付，同时定时任务也准备关闭订单。我这里采用乐观锁思想，在更新订单状态时不仅根据订单 ID，还会带上当前状态条件。支付时执行 status=0 → status=1，关单时执行 status=0 → status=2。因为两个操作都要求原状态必须是待支付，所以并发情况下只有一个更新能成功，从而避免“已支付订单被关单”或者“已取消订单又被支付”的问题。"
+    },
+    {
+      "id": "card-1789567540881-8lddd",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "在这个后端项目中,是怎样实现未支付订单自动关闭的功能的,怎样判断这个订单是未支付状态的",
+      "briefAnswer": "我项目里的未支付自动关单是通过 Spring Task 定时任务实现的。订单创建时状态设置为待支付，并记录创建时间，定时任务扫描超过支付有效期并且状态仍然是待支付的订单。关闭订单时不会直接修改，而是通过 where id = ? and status = 待支付 做条件更新，避免和用户支付操作发生并发冲突。支付成功也是从待支付状态更新到已支付，因此支付和关单只有一个能够成功，保证订单状态的一致性。",
+      "detailedAnswer": "我项目里的未支付自动关单是通过 Spring Task 定时任务实现的。订单创建时状态设置为待支付，并记录创建时间，定时任务扫描超过支付有效期并且状态仍然是待支付的订单。关闭订单时不会直接修改，而是通过 where id = ? and status = 待支付 做条件更新，避免和用户支付操作发生并发冲突。支付成功也是从待支付状态更新到已支付，因此支付和关单只有一个能够成功，保证订单状态的一致性。"
+    },
+    {
+      "id": "card-1789566439425-597cq",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "你在java后端项目中,是怎么样实现秒杀防超卖和一人一单",
+      "briefAnswer": "我的方案是 Redis + Lua + MQ + 数据库唯一索引。Lua 脚本原子地完成库存判断、一人一单判断、库存扣减和用户购买记录，解决并发下的超卖和重复购买；Redis 扣减成功后通过 RabbitMQ 异步创建订单，最后 MySQL 使用 user_id + voucher_id 唯一索引做最终兜底。",
+      "detailedAnswer": "具体来说，用户发起秒杀请求后，我不会直接查 MySQL，而是先在 Redis 里执行一段 Lua 脚本。Lua 脚本里面会一次性完成两个判断：第一，检查 Redis 中的商品库存是否大于 0；第二，检查当前用户是否已经购买过这个商品。如果库存不足就直接返回，如果用户已经下过单，也直接返回。两个条件都满足后，就在同一个 Lua 脚本里执行库存减 1，同时把用户 ID 记录到已购买集合中。因为 Redis 执行 Lua 脚本是原子性的，所以即使大量请求并发进来，也不会出现多个线程同时判断库存还有 1，然后一起扣减导致库存变成负数的问题。\n\nRedis 预扣成功后，我会先生成订单 ID，然后把订单信息发送到 RabbitMQ，由消费者异步创建 MySQL 订单，这样可以减少秒杀接口的响应时间。数据库层面我还会给 user_id + voucher_id 建立唯一索引作为最终兜底，防止因为消息重复消费等异常情况出现重复订单。"
+    },
+    {
+      "id": "card-1789566163173-4m5qq",
+      "category": "面试",
+      "proficiency": "生疏",
+      "question": "个人介绍",
+      "briefAnswer": "面试官您好，我叫黄士博，目前是西南交通大学人工智能专业硕士研究生，28届。在校期间，我主要围绕 Java 后端开发和 AI Agent 应用开发两个方向进行学习和项目实践。\n\n后端方面，我熟悉 Spring Boot、MySQL、Redis、RabbitMQ 等常用技术。在“惠享生活”项目中，我主要参与秒杀、订单和缓存等核心模块的设计与实现。比如通过 Redis 和 Lua 实现库存预扣，解决超卖和一人一单问题，并使用 RabbitMQ 异步下单,提高秒杀场景下的并发处理能力。同时结合乐观锁、多级缓存以及消息补偿机制，处理订单状态和数据一致性问题。\n\nAI Agent 方面，我主要参与了“心晴智伴”多智能体平台的开发。我设计并实现了 Agent Runtime Harness，对 Agent 调用、上下文管理、工具执行以及运行 Trace 进行统一管理；同时搭建了 Hybrid RAG 检索链路，并实现分层记忆和上下文压缩机制，项目意图识别总体准确率达到 96%。此外，通过 MCP 和异步工具队列对外部工具调用进行统一管理，提高工具执行的可靠性。\n\n在项目开发过程中，我不仅关注功能能否实现，也比较重视系统的并发能力、稳定性、可维护性和可测试性。以上就是我的基本情况，如果您对其中某段项目经历比较感兴趣，我可以再详细交流。",
+      "detailedAnswer": "面试官您好，我叫黄士博，目前是西南交通大学人工智能专业硕士研究生，28届。在校期间，我主要围绕 Java 后端开发和 AI Agent 应用开发两个方向进行学习和项目实践。\n\n后端方面，我熟悉 Spring Boot、MySQL、Redis、RabbitMQ 等常用技术。在“惠享生活”项目中，我主要参与秒杀、订单和缓存等核心模块的设计与实现。比如通过 Redis 和 Lua 实现库存预扣，解决超卖和一人一单问题，并使用 RabbitMQ 异步下单,提高秒杀场景下的并发处理能力。同时结合乐观锁、多级缓存以及消息补偿机制，处理订单状态和数据一致性问题。\n\nAI Agent 方面，我主要参与了“心晴智伴”多智能体平台的开发。我设计并实现了 Agent Runtime Harness，对 Agent 调用、上下文管理、工具执行以及运行 Trace 进行统一管理；同时搭建了 Hybrid RAG 检索链路，并实现分层记忆和上下文压缩机制，项目意图识别总体准确率达到 96%。此外，通过 MCP 和异步工具队列对外部工具调用进行统一管理，提高工具执行的可靠性。\n\n在项目开发过程中，我不仅关注功能能否实现，也比较重视系统的并发能力、稳定性、可维护性和可测试性。以上就是我的基本情况，如果您对其中某段项目经历比较感兴趣，我可以再详细交流。"
+    },
+    {
+      "id": "card-1789308756015-bg26d",
+      "category": "心晴智伴",
+      "proficiency": "生疏",
+      "question": "runtime和harness的联系和区别?",
+      "briefAnswer": "runtime负责Agent 怎么思考和协作,harness负责的是一次 Agent 请求的完整业务生命周期。",
+      "detailedAnswer": "Agent Runtime 和 Harness 的区别主要在职责层次。Runtime 是 Agent 的核心执行引擎，负责 Agent 注册、任务调度、事件流转、多 Agent 协作以及 Agent 的 decide 和 act 执行；Harness 则位于 Runtime 外层，负责把 Agent Runtime 工程化接入业务系统，比如输入脱敏、上下文组装、Runtime 调用、Trace 记录、工具后处理、消息和报告持久化以及异常处理。\n在我们的项目中调用链可以理解为 API → Agent Harness → Agent Runtime → 多 Agent → LLM/RAG/Tool。这样做的主要好处是让 Runtime 专注 Agent 调度，而 Harness 负责工程治理，避免数据库、Trace、Safety 等逻辑污染核心 Agent Runtime。"
+    },
+    {
+      "id": "card-1789270826230-z8863",
+      "category": "消息队列",
+      "proficiency": "生疏",
+      "question": "数据库和消息队列之间的一致性问题。  这个在rabbitmq是怎么实现的?",
+      "briefAnswer": "数据库和 RabbitMQ 不能直接放在一个本地事务里，一般采用最终一致性。数据库事务中同时写业务数据和本地消息表，提交后发送 RabbitMQ；通过 Publisher Confirm 判断 Broker 是否收到，失败就靠定时任务重试；消费者再通过消息 ID 或业务 ID 做幂等，处理成功后 ACK。这样通过“本地消息表 + Confirm + 重试 + 幂等”保证最终一致性。",
+      "detailedAnswer": "数据库和 RabbitMQ 本身属于两个独立系统，所以没办法直接靠一个本地事务保证强一致性。比如下单时，数据库事务已经提交了，但是 RabbitMQ 消息发送失败，就会出现“数据库有订单，但下游没收到消息”的不一致问题。实际项目里一般采用最终一致性方案，比较常见的是“本地消息表 + RabbitMQ Publisher Confirm + 重试机制”。具体来说，在一个数据库事务里，同时写业务数据和一条待发送消息记录，因为它们在同一个数据库事务中，所以可以保证要么都成功、要么都失败。事务提交之后，再把消息发送到 RabbitMQ。生产者开启 Publisher Confirm，如果 Broker 确认收到消息，就把本地消息表状态改成“已发送”；如果发送失败或者超时，就由定时任务扫描未发送消息进行重试。这样即使 RabbitMQ 临时故障，消息后面仍然可以补发。由于重试可能导致同一条消息重复投递，所以消费者还需要做幂等处理，比如通过业务唯一 ID、订单号或者消息 ID 判断是否已经消费过。消费者处理成功后再进行 ACK，如果处理失败，可以进行重试或者进入死信队列。"
+    },
+    {
+      "id": "card-1788602464324-ryeh4",
+      "category": "点评问题",
+      "proficiency": "生疏",
+      "question": "你说根据应用场景选择逻辑过期的方案解决缓存击穿，那你觉得什么场景才用互斥锁解决呢？",
+      "briefAnswer": "我认为是分业务场景的，例如金融类的业务场景，是要求强一致性的，那么才会使用互斥锁方案，而本项目中其实是一个社交媒体类型的业务场景，所以并不要求强一致性，而选择了服务可用性，采用逻辑过期方案。",
+      "detailedAnswer": "我认为是分业务场景的，例如金融类的业务场景，是要求强一致性的，那么才会使用互斥锁方案，而本项目中其实是一个社交媒体类型的业务场景，所以并不要求强一致性，而选择了服务可用性，采用逻辑过期方案。"
+    },
+    {
+      "id": "card-1788602406088-cres9",
+      "category": "点评问题",
+      "proficiency": "生疏",
+      "question": "什么是CAP定理",
+      "briefAnswer": "CAP 定理指分布式系统中的一致性 C、可用性 A、分区容错性 P 无法在网络分区发生时同时完全保证。由于分布式系统通常必须保证 P，所以实际是在 C 和 A 之间取舍：CP 优先数据一致性，必要时牺牲部分可用性；AP 优先系统可用性，允许短时间的数据不一致。",
+      "detailedAnswer": "CAP 定理主要描述的是分布式系统在发生网络分区时，一致性、可用性和分区容错性这三个目标无法同时完全满足。其中 C 是 Consistency，一致性，指所有节点在同一时刻看到的数据是一致的；A 是 Availability，可用性，指每个请求都能在有限时间内得到响应；P 是 Partition Tolerance，分区容错性，指即使节点之间出现网络故障，系统仍然能够继续运行。因为分布式系统中网络故障是无法完全避免的，所以 P 基本必须保证，真正需要做的选择通常是在发生网络分区时，是优先保证 C 还是优先保证 A，也就是常说的 CP 和 AP.比如两个节点 A、B 保存同一份数据��正常情况下它们可以同步，但现在网络断了：\n\n客户端\n   ↓\n节点 A   ×   节点 B\n       网络分区\n\n此时如果客户端修改了节点 A：\n\n如果要求 强一致性 C，那么节点 B 因为无法确认最新数据，就不能继续正常提供服务，这时候牺牲的是 A，属于 CP。\n如果要求 高可用 A，那么节点 B 仍然继续响应请求，但它可能返回旧数据，这时候暂时牺牲的是 C，属于 AP。\n\n所以 CAP 不是说“三个里面随便选两个”，而是更准确地说：\n\n当网络分区 P 发生时，系统必须在一致性 C 和可用性 A 之间做权衡。\n\n常见理解可以这样记：\n\nCP：宁可暂时不能用，也要保证数据一致\nAP：宁可暂时数据不一致，也要保证服务可用\n\n例如银行转账这类业务通常更重视一致性，不能出现余额错误；而一些社交动态、点赞数、推荐数据，可以允许短时间不一致，更偏向可用性。"
+    },
+    {
+      "id": "card-1788601359877-ouhhb",
+      "category": "点评问题",
+      "proficiency": "生疏",
+      "question": "在消息队列中,rabbitmq跟kafka的区别是什么?为什么选用rabbitmq?",
+      "briefAnswer": "RabbitMQ 更偏传统业务消息队列，特点是低延迟、可靠投递、ACK 和路由能力强，适合订单、支付、通知等业务场景；Kafka 更偏高吞吐分布式日志和流处理，适合日志、埋点和大数据实时计算。项目里如果消息量没有达到超大规模，更关注可靠性和业务解耦，我会优先选 RabbitMQ，因为它功能更贴合业务消息场景，接入和维护成本也更低。",
+      "detailedAnswer": "RabbitMQ 和 Kafka 都可以做消息队列，但定位不太一样。RabbitMQ 更偏传统消息中间件，强调消息投递、低延迟和灵活路由；Kafka 更偏高吞吐的分布式日志系统，强调海量数据吞吐、消息持久化和流式处理。 RabbitMQ 基于 Exchange、Queue、Routing Key，可以通过 direct、topic、fanout 等模式灵活路由消息，而且支持 ACK、死信队列、延迟消息等机制，比较适合订单、支付、通知这类业务消息。Kafka 则是 Topic + Partition 模型，消息顺序追加到日志文件中，吞吐量更高，也更适合日志采集、埋点、流式计算、大数据场景。对于普通业务系统，如果消息量不是特别夸张，而更关注可靠投递、业务解耦和灵活路由，我一般会选择 RabbitMQ；如果是高并发日志、用户行为数据或者实时数据流处理，则 Kafka 更合适。如果你的项目每秒可能只有���百、几千条订单消息，你为了“Kafka 吞吐量高”就上 Kafka，反而可能属于过度设计。"
+    },
+    {
+      "id": "card-1788601282540-npk5j",
+      "category": "点评问题",
+      "proficiency": "生疏",
+      "question": "现在一般怎样做压力测试,使用的jmeter?这个是模拟用户高并发访问是吧,简要描述一下你是怎么做的压力测试?",
+      "briefAnswer": "我一般使用 JMeter 做接口压力测试，通过线程组模拟大量用户并发访问核心接口，并逐步提高并发量。测试时重点关注 QPS/TPS、平均响应时间、P95/P99 和错误率，同时监控 CPU、内存、JVM、MySQL、Redis 和连接池等指标。如果性能出现拐点，就继续定位数据库慢查询、锁竞争、缓存或连接池等瓶颈，优化后再进行压测对比。",
+      "detailedAnswer": "在项目中做压力测试时，我会使用 JMeter 模拟用户并发请求。首先选择核心接口，比如登录、查询商品、下单这些高频接口，然后配置线程组，设置并发用户数、启动时间和循环次数，比如从 100、500、1000 并发逐步增加，而不是一开始直接把并发拉满。测试过程中重点关注 QPS/TPS、平均响应时间、P95/P99 响应时间和错误率，同时结合服务器监控查看 CPU、内存、JVM、数据库连接池、Redis 和 MySQL 的状态。如果发现并发增加后响应时间突然上升或者大量报错，我会进一步定位瓶颈是在数据库慢查询、连接池不足、锁竞争、缓存命中率还是 JVM GC，然后针对问题优化，再重新压测进行对比。"
+    },
+    {
+      "id": "card-1788601160686-qilpm",
+      "category": "点评问题",
+      "proficiency": "生疏",
+      "question": "QPS/TPS 是什么?代表什么?一般多少就够了?",
+      "briefAnswer": "QPS 是每秒处理多少个请求，TPS 是每秒完成多少个完整业务事务，一个事务可能包含多个请求。多少算够没有固定标准，要看实际峰值流量，通常压测会验证系统能稳定承受预计峰值的 2～5 倍，同时保证响应时间、错误率和服务器资源都在合理范围内。",
+      "detailedAnswer": "QPS 是每秒请求数，主要衡量系统接口的吞吐能力；TPS 是每秒完成的业务事务数，一个事务可能由多个请求组成，所以两者不一定相等。至于多少 QPS 算够，不能单看一个数字，要根据实际业务峰值和机器配置判断。我一般会先估算线上峰值流量，再通过 JMeter 逐步加压，通常验证系统能稳定支撑预估峰值的 2～5 倍，同时观察 P95/P99 响应时间、错误率、CPU、数据库连接池等指标，只要达到容量目标并且没有明显性能瓶颈，就认为满足要求。"
+    },
+    {
+      "id": "card-1788438211537-q0ife",
+      "category": "分布式",
+      "proficiency": "生疏",
+      "question": "什么是BASE 理论",
+      "briefAnswer": "BASE 是分布式系统里常见的一种一致性思想，包含 基本可用、软状态、最终一致性。它不要求数据每一时刻都强一致，而是允许短暂不一致，通过异步同步保证最终一致，从而换取更高的可用性和扩展性",
+      "detailedAnswer": "BASE 理论可以理解为对 CAP 中 AP 方案的一种工程化补充，它强调在分布式系统里不一定追求强一致性，而是通过牺牲一部分一致性来换取更高的可用性和系统伸缩性。 BASE 分别代表 Basically Available、Soft State 和 Eventually Consistent，也就是基本可用、软状态和最终一致性。\n\n具体来说，基本可用是指系统发生故障时，允许部分功能降级或者响应变慢，但核心服务仍然可用；软状态是指系统允许数据在一段时间内处于中间状态，不要求所有节点立刻完全一致；最终一致性是指经过一段时间的数据同步后，各个节点最终会达到一致。比如电商系统里，库存、订单状态在极短时间内可能存在同步延迟，但最终会保持一致。相对于 ACID 强调强一致和事务严格性，BASE 更适合高并发、大规模分布式系统"
+    },
+    {
+      "id": "card-1788438115224-vetjl",
+      "category": "分布式",
+      "proficiency": "生疏",
+      "question": "什么是网络分区",
+      "briefAnswer": "在分布式系统中，节点（服务器）之间通过网络通信协作。网络分区指的是由于网络故障（如断网、路由器故障、电缆损坏等），导致系统中的部分节点之间无法正常通信。此时，整个系统被分割成多个独立的子网络（称为“分区”），每个分区内的节点可以互相通信，但无法与其他分区的节点通信。",
+      "detailedAnswer": "在分布式系统中，节点（服务器）之间通过网络通信协作。网络分区指的是由于网络故障（如断网、路由器故障、电缆损坏等），导致系统中的部分节点之间无法正常通信。此时，整个系统被分割成多个独立的子网络（称为“分区”），每个分区内的节点可以互相通信，但无法与其他分区的节点通信。"
+    },
+    {
+      "id": "card-1788438086292-2nvo8",
+      "category": "分布式",
+      "proficiency": "生疏",
+      "question": "什么是CAP 定理",
+      "briefAnswer": "CAP 分别是 一致性 C、可用性 A、分区容错性 P。核心结论是：当网络分区发生时，C 和 A 不能同时完全保证，只能二选一。 实际分布式系统通常必须保证 P，因此最终是在 CP 和 AP 之间做权衡。",
+      "detailedAnswer": "CAP 是分布式系统里的一个基本理论，分别指一致性 Consistency、可用性 Availability 和分区容错性 Partition Tolerance。 一致性指的是多个节点对同一份数据看到的结果要保持一致；可用性指的是每个请求都能够在合理时间内得到响应；分区容错性指的是当节点之间发生网络分区、通信中断时，系统仍然能够继续对外提供服务。\n\nCAP 定理的核心不是简单地说“三选二”，而是说：当网络分区 P 真正发生时，系统必须在 C 和 A 之间做取舍。 因为分布式系统里网络故障是无法完全避免的，所以实际系统一般都会保证 P。如果这个时候选择一致性，就可能拒绝一部分请求或者让请求等待，属于 CP；如果选择可用性，就允许不同节点暂时返回不同的数据，属于 AP。比如一些强一致的分布式协调系统更偏 CP，而一些强调高可用的分布式存储更偏 AP。"
+    },
+    {
+      "id": "card-1788437961018-8jlsm",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "Linux 常用命令",
+      "briefAnswer": "Linux 常用命令我主要分几类：文件操作有 ls、cd、cp、mv、rm，日志查看有 cat、less、tail -f、grep，进程管理有 ps、top、kill，网络排查有 ping、curl、ss/netstat，资源查看有 df -h、du -sh、free -h，另外还有权限命令 chmod、chown 和压缩命令 tar。实际开发中最常用的是查日志、查进程、查端口和查资源占用。",
+      "detailedAnswer": "件和目录操作常用 ls、cd、pwd、mkdir、rm、cp、mv；查看文件内容常用 cat、less、head、tail，线上看日志我比较常用 tail -f；搜索内容常用 grep，查找文件可以用 find。进程相关常用 ps、top、kill，比如 ps -ef | grep java 查 Java 进程，kill -9 pid 强制结束进程。网络相关常用 ping、curl、netstat 或 ss，比如用 ss -lntp 查看端口监听情况。磁盘和内存可以用 df -h、du -sh、free -h，分别查看磁盘、目录占用和内存情况。还有权限相关的 chmod、chown，以及打包压缩常用的 tar。实际排查线上问题时，我经常会把这些命令组合起来使用，比如先查进程、再查端口、最后通过日志定位问题。"
+    },
+    {
+      "id": "card-1788437919494-fz4ju",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "IO多路复用 select、poll、epoll",
+      "briefAnswer": "IO多路复用：IO 多路复用是一种高效的 IO 模型，它允许单个线程同时监听多个文件描述符（FD），并在某个 FD 可读、可写或出现异常时得到通知。这样可以避免无效的等待，充分利用 CPU 资源。",
+      "detailedAnswer": "IO多路复用：IO 多路复用是一种高效的 IO 模型，它允许单个线程同时监听多个文件描述符（FD），并在某个 FD 可读、可写或出现异常时得到通知。这样可以避免无效的等待，充分利用 CPU 资源。\n监听FD以及通知的方式  有多种实现，常见的有：select、poll、epoll\nepoll  相比于 poll 和 select ，能支持更大的并发连接数、性能更高\nselect 模式\n内核空间存储FD的结构是固定大小为1024的数组，因此最大并发连接数受限于数组大小\n当某个FD就绪时，从内核空间将所有FD拷贝到用户空间，用户空间需要遍历数组，找出哪些FD就绪\npoll模式\n内核空间存储FD的结构是链表，因此理论上没有最大连接数限制\n当某个FD就绪时，从内核空间将所有FD拷贝到用户空间，用户空间需要遍历链表，找出哪些FD就绪，当监听的FD越多 (即链表越长)，遍历耗时增加，影响并发性能\nepoll模式\n内核空间存储FD的结构是红黑树，增删改查性能稳定\n当通知有数据就绪可读/可写时，从内核空间只将就绪的FD拷贝到用户空间，减少了内核空间和用户空间之间的数据拷贝，且用户空间无需再遍历所有FD，直接处理返回的就绪的FD"
+    },
+    {
+      "id": "card-1788437854923-lnuk7",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "什么是IO多路复用",
+      "briefAnswer": "IO 多路复用就是一个线程同时监听多个 IO 连接，哪个连接就绪就处理哪个，避免一个连接占一个线程。Linux 常见实现有 select、poll、epoll，其中 epoll 更适合高并发。核心作用是减少线程数量、降低线程切换开销，提高大量连接场景下的处理效率。",
+      "detailedAnswer": "IO 多路复用就是用一个线程同时监听多个 IO 连接，哪个连接真正有读写事件了，再去处理哪个连接，而不是给每个连接都分配一个线程一直阻塞等待。 它主要解决的是高并发场景下大量连接带来的线程资源浪费问题。\n\n传统阻塞 IO 里，一个线程通常对应一个连接，如果有几万个连接，就可能需要大量线程，线程切换和内存开销都很大。IO 多路复用则是把多个 socket 注册到一个监听器上，由操作系统帮我们监听这些连接的状态，当某些连接变成可读、可写时，再通知应用程序去处理。Linux 里常见的实现有 select、poll 和 epoll，其中 epoll 在高并发场景下用得比较多，因为它不需要每次都遍历所有连接，而是直接返回已经就绪的事件。\n\n所以我理解 IO 多路复用的核心就是：一个线程管理多个连接，只有连接真正就绪时才进行读写，从而减少线程数量和无效阻塞，提高高并发场景下的资源利用率。"
+    },
+    {
+      "id": "card-1788437796651-1xu5k",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "如何解除死锁",
+      "briefAnswer": "死锁解除是在死锁已经发生之后进行处理，常见方式是终止部分进程或线程、强制剥夺资源、必要时进行回滚，直到循环等待关系被打破。比如数据库里常见的做法就是检测到死锁后，选择一个事务回滚，释放它持有的锁，让其他事务继续执行。检测到死锁后，采取相应的措施来解除死锁。\n常用方法：\n● 终止进程：选择一个或多个进程终止以打破死锁。\n● 回滚 (Rollback)：将进程回退到之前的某个安全状态。\n● 资源抢占：强行从某些进程中回收资源，重新分配。",
+      "detailedAnswer": "锁解除属于死锁已经发生之后的恢复措施，核心思路就是想办法打破当前的循环等待关系。常见做法主要有两类：第一类是终止进程或者线程，可以直接终止一个死锁进程，也可以按照优先级、执行时间、资源占用等因素逐个终止，直到死锁被解除；第二类是资源剥夺，从某些进程手里强制回收资源，再分配给其他进程，让其中一部分进程先继续执行。不过资源剥夺通常还需要考虑回滚，因为被剥夺资源的进程可能已经执行了一部分操作，需要恢复到之前的安全状态。实际系统中，有些场景也会采用超时机制，比如数据库事务等待锁超过一定时间后主动回滚其中一个事务。"
+    },
+    {
+      "id": "card-1788437704771-jdfth",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "如何避免死锁",
+      "briefAnswer": "死锁避免和死锁预防不一样，预防是破坏死锁的必要条件，避免是在资源分配前判断这次分配是否安全。典型算法是银行家算法，它根据当前可用资源、已分配资源和进程最大需求，判断分配后系统是否仍存在一个安全执行序列；如果存在就分配，不存在就让进程等待，从而保证系统始终处于安全状态。",
+      "detailedAnswer": "系统动态检测可能导致死锁的情况，避免进入死锁状态。\n常用方法：\n● 每次资源申请时，判断分配后是否仍处于“安全状态”。\n● 如果资源分配会导致死锁，则拒绝该请求。"
+    },
+    {
+      "id": "card-1788435726859-pq6kk",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "如何预防死锁",
+      "briefAnswer": "预防死锁的核心就是破坏四个必要条件中的任意一个。互斥通常不好破坏，所以主要是：一次性申请资源来破坏占有并等待；申请失败时释放已有资源来破坏非抢占；规定统一的资源申请顺序来破坏循环等待。实际开发中最常用的是固定加锁顺序和超时机制。",
+      "detailedAnswer": "从破坏死锁的四个�������要条件来回答。互斥条件很多资源本身就要求独占，所以通常不好破坏；比较常见的是破坏另外三个条件。第一，可以破坏占有并等待，比如要求线程一次性申请完所有需要的资源，拿不到就一个都不占有；第二，可以破坏非抢占，比如线程申请新资源失败时，主动释放自己已经持有的资源，之后再重新竞争；第三，可以破坏循环等待，给所有资源规定统一的申请顺序，比如规定必须先拿锁 A，再拿锁 B，所有线程都按照同一个顺序获取资源，就不会形成环形等待。�������际开发中最常用的通常是固定加锁顺序、减少锁嵌套、缩短持锁时间，以及使用 tryLock 和超时机制来降低死锁风险。"
+    },
+    {
+      "id": "card-1788431743214-t9t0u",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "产生死锁的四个必要条件",
+      "briefAnswer": "1. 互斥：资源必须处于非共享模式，即一次只有一个进程可以使用。如果另一进程申请该资源，那么必须等待直到该资源被释放为止。\n2. 占有并等待：一个进程至少应该占有一个资源，并等待另一资源，而该资源被其他进程所占有。\n3. 非抢占：资源不能被抢占。只能在持有资源的进程完成任务后，该资源才会被释放。\n4. 循环等待：有一组等待进程 {P0, P1,..., Pn}， P0 等待的资源被 P1 占有，P1 等待的资源被 P2 占有，……，Pn-1 等待的资源被 Pn 占有，Pn 等待的资源被 P0 占有。\n只要上述条件之一不满足，就不会发生死锁。",
+      "detailedAnswer": "1. 互斥：资源必须处于非共享模式，即一次只有一个进程可以使用。如果另一进程申请该资源，那么必须等待直到该资源被释放为止。\n2. 占有并等待：一个进程至少应该占有一个资源，并等待另一资源，而该资源被其他进程所占有。\n3. 非抢占：资源不能被抢占。只能在持有资源的进程完成任务后，该资源才会被释放。\n4. 循环等待：有一组等待进程 {P0, P1,..., Pn}， P0 等待的资源被 P1 占有，P1 等待的资源被 P2 占有，……，Pn-1 等待的资源被 Pn 占有，Pn 等待的资源被 P0 占有。\n只要上述条件之一不满足，就不会发生死锁。"
+    },
+    {
+      "id": "card-1788431362679-84lza",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "虚拟地址->真实物理地址的映射关系",
+      "briefAnswer": "操作系统常见的内存管理方式有 连续分配、分页、分段和段页式管理。连续分配简单但容易产生碎片；分页把内存按固定大小划分，通过页表映射，避免外部碎片；分段按照代码段、数据段等逻辑划分，但容易产生外部碎片；段页式就是先分段再分页。现代操作系统主要使用 分页 + 虚拟内存。",
+      "detailedAnswer": "常见的内存管理方式主要有连续分配、分页、分段，以及段页式管理。 连续分配就是给一个进程分配一整块连续的物理内存，实现比较简单，但是容易产生内存碎片。分页是现在比较常见的方式，它把虚拟地址空间划分成固定大小的页，把物理内存划分成同样大小的页框，然后通过页表建立映射，优点是可以避免外部碎片，但是可能产生少量内部碎片。分段则是按照程序的逻辑来划分，比如代码段、数据段、栈段，每个段大小可以不同，比较符合程序的逻辑结构，但是容易产生外部碎片。\n\n实际系统中还可以使用段页式管理，也就是先按照逻辑划分成段，再把每个段划分成固定大小的页，这样既保留了分段的逻辑性，又利用分页减少了外部碎片。像现代操作系统，实际内存管理的核心一般还是以分页和虚拟内存为主，通过页表、TLB 和缺页机制实现虚拟地址到物理地址的映射。"
+    },
+    {
+      "id": "card-1788430879853-bbzmq",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "什么是虚拟内存？",
+      "briefAnswer": "虚拟内存就是操作系统给每个进程提供的独立虚拟地址空间，虚拟地址通过页表映射到物理内存。它主要解决三个问题：进程隔离、连续地址空间、物理内存不足时通过换页扩展可用空间。CPU 通过 MMU 完成地址转换，TLB 用来加速；页面不在内存时会触发缺页异常，再从磁盘加载。",
+      "detailedAnswer": "虚拟内存是操作系统提供的一种内存管理机制，它给每个进程提供一个独立、连续的虚拟地址空间，但这些虚拟地址并不一定直接对应真实的物理内存，而是通过页表映射到物理内存。 这样做主要有几个好处：第一，可以实现进程之间的内存隔离，一个进程通常不能直接访问另一个进程的地址空间；第二，可以让程序感觉自己拥有一块很大的连续内存，而实际物理内存可以是不连续的；第三，当物理内存不足时，操作系统可以把暂时不用的页面换到磁盘，需要时再加载回来，从而一定程度上扩展可用���存。\n\n在实际访问过程中，CPU 访问的是虚拟地址，MMU 会通过页表把虚拟地址转换成物理地址，为了提高转换效率还会使用 TLB 缓存页表项。如果访问的虚拟页当前不在物理内存中，就会产生缺页异常 Page Fault，操作系统再把对应页面从磁盘加载到内存。所以虚拟内存的核心可以理解为：通过地址映射，把程序看到的虚拟地址空间和真实物理内存解耦。"
+    },
+    {
+      "id": "card-1788430047370-7x5h6",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "进程和线程的通信方式",
+      "briefAnswer": "进��之间地址空间独立，所以需要通过 管道、消息队列、共享内存、Socket、信号、信号量 等 IPC 方式通信；其中共享内存效率较高，但需要额外做同步。线程之间因为共享同一进程的内存，所以通常通过共享变量通信，再配合 synchronized、Lock、volatile、CAS、wait/notify、BlockingQueue 等机制保证同步和线程安全。",
+      "detailedAnswer": "进程之间因为地址空间是独立的，所以不能直接访问对方的数据，需要通过 IPC，也就是进程间通信机制来完成。 常见方式包括管道、消息队列、共享内存、Socket、信号和信号量。其中，共享内存效率通常比较高，因为多个进程可以直接访问同一块内存，但同时也需要配合信号量或者锁来保证并发安全；Socket 则既可以用于同一台机器上的进程通信，也可以用于不同机器之间的通信。\n\n线程之间的通信会简单一些，因为同一个进程里的线程本身就共享堆内存和全局变量。 所以线程之间通常直接通过共享变量交换数据，但是为了避免并发问题，需要配合 synchronized、Lock、volatile、CAS 等同步机制。在 Java 里面还可以通过 wait/notify、Condition、BlockingQueue 等方式实现线程之间的协作。所以可以总结为：进程通信重点是“怎么跨地址空间传数据”，线程通信重点是“共享数据以后怎么保证同步和线程安全”"
+    },
+    {
+      "id": "card-1788429137944-n3use",
+      "category": "操作系统",
+      "proficiency": "生疏",
+      "question": "进程和线程是什么?",
+      "briefAnswer": "程是资源分配的基本单位，线程是 CPU 调度的基本单位。进程之间地址空间相互独立，一个进程可以包含多个线程；同一进程中的线程共享堆、全局变量等资源，但每个线程有自己独立的栈、程序计数器和寄存器。线程切换开销通常比进程小，但因为共享资源，所以需要注意并发安全问题。",
+      "detailedAnswer": "程是操作系统进行资源分配的基本单位，线程是 CPU 调度和执行的基本单位。 一个程序运行起来之后通常会对应一个进程，进程拥有自己独立的地址空间、文件描述符等资源；而一个进程内部可以创建多个线程，这些线程会共享进程的大部分资源，比如堆内存和全局变量，但是每个线程又有自己独立的程序计数器、栈和寄存器。\n\n它们最大的区别就是，进程之间相对独立，线程之间共享资源更多。 所以进程切换的开销一般比线程更大，因为进程切换需要切换更多的地址空间和资源上下文；线程因为共享同一个进程的内存空间，切换和通信成本通常更低。但是线程共享数据也会带来并发安全问题，比如多个线程同时修改同一个变量，就可能出现数据不一致，所以需要通过锁、CAS 等机制保证线程安全。简单来说，进程负责隔离资源，线程负责具体执行任务。"
+    },
+    {
+      "id": "card-1788424926545-dlwow",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "什么是CDN",
+      "briefAnswer": "CDN 就是把内容缓存到离用户更近的边缘节点。用户访问时，DNS 会把请求调度到合适的 CDN 节点，节点有缓存就直接返回，没有就回源服务器获取并缓存。它的主要作用是降低网络延迟、提高访问速度、减轻源站压力和带宽压力。",
+      "detailedAnswer": "CDN 全称是 Content Delivery Network，内容分发网络。我理解它的核心作用就是：把网站的静态资源提前缓存到离用户更近的边缘节点上，这样用户访问时就不需要每次都去请求源站，可以降低访问延迟，同时减轻源站压力。 比如一个网站的源服务器在北京，但用户在广州，如果没有 CDN，请求可能每次都要跨很远的网络到北京；用了 CDN 之后，用户可能直接访问广州附近的 CDN 节点，如果节点里已经缓存了图片、视频、CSS、JS 这些资源，就可以直接返回。\n\nCDN 的工作过程一般是这样的：用户访问一个域名时，DNS 解析不会直接把源站 IP 返回给用户，而是把请求调度到一个比较合适的 CDN 节点，比如距离近、网络质量好、负载较低的节点。用户之后就向这个 CDN 节点请求资源，如果节点里有缓存，就直接返回，这叫 缓存命中；如果没有缓存，就会回源到源服务器获取资源，再缓存到本地后返回给用户。所以 CDN 主要解决的是 访问速度、带宽压力和高并发 问题，常用于图片、视频、CSS、JS、安装包等静态资源。"
+    },
+    {
+      "id": "card-1788424818475-ecyfm",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "键入网址到网页显示，期间发生了什么",
+      "briefAnswer": "输入网址后，首先通过 DNS 把域名解析成 IP，然后建立 TCP 连接，HTTPS 还需要 TLS 握手。浏览器生成 HTTP 请求后，传输层加 TCP 头，网络层加 IP 头，其中 IP 地址负责定位最终远程主机；到了数据链路层，主机通过 ARP 获取下一跳 MAC 地址，再添加以太网 MAC 头形成帧进行传输。数据经过路由器时根据目标 IP 查路由表，IP 负责端到端通信，MAC 负责一跳一跳传输，所以每经过一个路由器 MAC 地址都会变化。服务器收到后逐层解封装并返回响应，浏览器最后解析 HTML、CSS、JS，完成布局、绘制和合成，最终显示网页。",
+      "detailedAnswer": "首先浏览器解析 URL，通过 DNS 把域名解析成服务器的 IP 地址。然后如果使用 TCP，就先通过三次握手建立连接，HTTPS 还要继续进行 TLS 握手。接下来浏览器生成 HTTP 请求，到了传输层以后会加上 TCP 头部，里面包含源端口、目标端口、序列号等信息，形成 TCP 报文段；继续到网络层后，会再加上 IP 头部，包含源 IP 和目标 IP，这样就可以确定数据最终要发送到哪一台远程主机。\n\n但是 IP 只能解决“最终发给谁”，数据真正要在当前局域网里传出去，还需要经过数据链路层。所以主机会根据目标 IP 和自己的子网掩码判断目标是否和自己在同一网段，如果不在同一网段，就把数据交给默认网关。此时还需要通过 ARP 获取下一跳设备的 MAC 地址，然后给 IP 数据包加上 以太网帧头，里面包含源 MAC 和目标 MAC，形成以太网帧，再通过网卡转换成电信号、光信号或者无线信号发送出去。\n\n数据经过多个路由器时，IP 地址一般保持不变，用来标识最终通信双方，但是每经过一跳，MAC 地址都会重新封装，因为 MAC 只负责当前这一段链路的传输。路由器根据目标 IP 查路由表，决定下一跳，然后重新添加新的 MAC 头继续转发，直到到达服务器。服务器逐层解封装，处理 HTTP 请求并返回响应，返回过程类似。最后浏览器收到 HTML、CSS、JavaScript 等资源后，构建 DOM、CSSOM 和渲染树，再经过布局、绘制和合成，最终把网页显示出来。"
+    },
+    {
+      "id": "card-1788423809292-4kexq",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "如何解决粘包和拆包  ,udp协议有这个现象没?",
+      "briefAnswer": "TCP 粘包拆包的解决核心是应用层定义消息边界，常见方式有 固定长度、特殊分隔符、消息头携带消息长度，其中“长度字段 + 消息体”比较常用。UDP 一般没有粘包拆包，因为 UDP 面向报文、保留消息边界，一次发送对应一个数据报；UDP 更需要考虑的是 丢包、乱序和重复，IP 分片也不属于 TCP 意义上的粘包拆包。",
+      "detailedAnswer": "如果面试官问我粘包和拆包怎么解决，我会回答：解决的核心就是在应用层明确一条消息的边界。 因为 TCP 是面向字节流的，本身不知道哪几个字节属于一条完整消息，所以一般有三种方案。第一种是固定消息长度，比如每条消息固定 100 个字节，接收方每次读满 100 个字节就认为是一条消息；第二种是使用特殊分隔符，比如用 \\n 标识一条消息结束；第三种也是实际开发里比较常用的，就是消息头 + 消息体，在消息头中保存消息体长度，接收方先读取固定长度的消息头，拿到 length 以后，再继续读取指定长度的消息体，这样就能准确地拆分出每一条完整消息。像 Netty 里面也提供了对应的解码器来处理这些情况。\n\nUDP 一般不会出现 TCP 意义上的粘包和拆包。 因为 UDP 是面向报文的，发送方一次发送一个 UDP 数据报，接收方也是以一个完整数据报为单位接收，所以 UDP 天然保留消息边界，不会把两个 UDP 数据报粘成一个，也不会把一个 UDP 数据报分成两次交给应用层。当然，如果 UDP 数据报太大，在 IP 层可能发生分片，但是这些分片通常会在 IP 层重新组装之后再交给 UDP，这和 TCP 所说的粘包拆包不是一个概念。另外 UDP 不保证可靠性，所以它更需要关注的是丢包、乱序、重复这些问题。"
+    },
+    {
+      "id": "card-1788423614052-i8y42",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "什么是粘包和拆包?",
+      "briefAnswer": "TCP 出现粘包和拆包，是因为 TCP 是面向字节流的，没有消息边界。一次发送不一定对应一次接收，多条消息可能一次被读出来叫粘包，一条消息可能分多次读取叫拆包。解决方法是在应用层定义消息边界，常见方式是 固定长度、分隔符、消息头携带长度字段，其中长度字段是比较常用的方案。",
+      "detailedAnswer": "TCP 的粘包和拆包，本质上是因为 TCP 是面向字节流的协议，它没有消息边界的概念。比如发送方连续调用两次 send，分别发送了两条消息，但是 TCP 只会把它们当成一段连续的字节流来传输。接收方一次 read 的时候，可能把两条消息一起读出来，这就是粘包；也可能一条完整消息因为发送缓冲区、网络传输或者接收缓冲区等原因，被分成多次才能读完整，这就是拆包。所以粘包和拆包并不是 TCP 出错了，而是 TCP 本身就不保证一次发送对应一次接收。\n\n实际开发中解决这个问题，关键就是在应用层自己定义消息边界。常见方式有三种：第一种是固定长度，每条消息都规定相同长度；第二种是使用特殊分隔符，比如每条消息后面加 \\n；第三种也是最常用的一种，就是在消息头里增加一个长度字段，接收方先读取消息长度，再按照这个长度读取完整的消息。像很多 RPC 框架、Netty 自定义协议，本质上都是通过类似的方法来解决粘包拆包问题。"
+    },
+    {
+      "id": "card-1788423521369-52yth",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "tcp五层模型",
+      "briefAnswer": "TCP/IP 五层模型从上到下是 应用层、传输层、网络层、数据链路层、物理层。应用层负责具体网络应用，传输层通过 TCP/UDP 负责进程间通信，网络层通过 IP 负责寻址和路由，数据链路层通过 MAC 负责相邻节点传输，物理层负责真正传输比特流；发送时数据会按照 数据 → 报文段 → 数据包 → 帧 → 比特流 逐层封装。",
+      "detailedAnswer": "TCP/IP 五层模型从上到下主要分为应用层、传输层、网络层、数据链路层和物理层。 应用层主要负责给具体的应用程序提供网络服务，比如 HTTP、DNS；传输层主要负责端到端，也就是进程之间的数据传输，常见的协议就是 TCP 和 UDP；网络层主要负责 IP 寻址和路由选择，解决数据从一台主机到另一台主机怎么走的问题；数据链路层主要负责同一个局域网或者相邻节点之间的数据传输，通过 MAC 地址来通信；物理层则负责真正把 0 和 1 转换成电信号、光信号或者无线信号进行传输。另外从数据封装的角度看，发送端的数据会从应用层往下逐层封装，经过传输层形成报文段、网络层形成数据包、数据链路层形成帧，最后由物理层以比特流发送出去，接收端再反过来逐层解封装。\n\n精简答案"
+    },
+    {
+      "id": "card-1788423212399-lwidc",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "TCP可靠性保证",
+      "briefAnswer": "TCP 主要通过 序列号 + ACK 确认 + 超时/快速重传 + 校验和 + 滑动窗口 + 拥塞控制 保证可靠性。序列号保证数据不重复、不乱序，ACK 确认数据是否到达，数据丢失后通过重传恢复，校验和检测传输错误；滑动窗口控制发送速度避免接收方处理不过来，拥塞控制则避免网络过载。",
+      "detailedAnswer": "TCP 的可靠性主要是通过 序列号、确认应答、超时重传、校验和、滑动窗口以及拥塞控制 这些机制共同保证的。首先，TCP 会给发送的数据进行编号，也就是使用 序列号 Seq，接收方通过序列号判断数据有没有丢失、重复或者乱序，并且可以对乱序的数据重新排序。接收方收到数据后会返回 ACK 确认应答，告诉发送方下一次期望收到哪个字节；如果发送方在规定时间内没有收到 ACK，就会触发 超时重传，另外收到多个重复 ACK 时还可能触发 快速重传。TCP 报文中还有 校验和，用于检测数据在传输过程中有没有发生错误，错误的数据会被丢弃并等待重新发送。\n\n除此之外，TCP 通过 滑动窗口实现流量控制，接收方会通过窗口大小告诉发送方自己还能接收多少数据，避免发送速度太快把接收方缓冲区撑满；同时 TCP 还有 拥塞控制，例如慢启动、拥塞避免、快速重传和快速恢复，用于避免网络发生严重拥塞。所以 TCP 的可靠性本质上可以概括成：数据有编号、收到要确认、丢了会重传、乱了能排序、错了能检测，同时通过流量控制和拥塞控制保证传输过程稳定。\n\n容易被追问的几个点\n序列号 Seq：解决数据的乱序、重复、丢失判断。\nACK 确认应答：接收方告诉发送方“前面的数据已经收到，下一次我要哪个字节”。\n超时重传 RTO：超过一定时间没有收到 ACK，就重新发送。\n快速重传：连续收到 3 个重复 ACK，通常不等超时，直接重传疑似丢失的数据。\n校验和：判断 TCP 报文在传输过程中是否发生比特错误。\n滑动窗口：主要解决接收方来不及处理的问题，也就是流量控制。\n拥塞控制：主要解决网络本身承受不了这么多数据的问题。"
+    },
+    {
+      "id": "card-1788360676087-t89t1",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "TIME_WAIT 状态的连接过多怎么处理",
+      "briefAnswer": "TIME_WAIT 过多一般是大量短连接和主动关闭造成的，优先通过 Keep-Alive、连接池复用、减少频繁建连断连以及调整关闭方来解决，同时排查超时和连接池配置；如果业务层已经优化，再考虑扩大本地端口范围、合理使用 tcp_tw_reuse 等内核参数，但不能简单靠调小 tcp_fin_timeout，因为它并不是直接控制 TIME_WAIT 的。",
+      "detailedAnswer": "TIME_WAIT 过多通常说明服务端存在大量主动关闭的短连接。处理时我会先找原因，而不是直接调内核参数。第一，尽量减少短连接，比如 HTTP 开启 Keep-Alive、连接池复用数据库或者下游服务连接，避免频繁创建和关闭 TCP 连接；第二，如果当前服务不应该主动关闭连接，可以调整连接关闭策略，让客户端或者下游主动关闭，这样 TIME_WAIT 就会出现在对方；第三，要检查是不是因为超时配置过短、连接池配置不合理或者请求量突然增大导致频繁断连。如果业务层已经优化过，仍然有大量 TIME_WAIT，再考虑操作系统层面的参数优化，比如扩大本地端口范围、适当调整 tcp_fin_timeout 等参数。不过这里要注意，tcp_fin_timeout 主要影响 FIN_WAIT_2，并不能直接缩短 TIME_WAIT；Linux 上还可以根据具体场景考虑 tcp_tw_reuse，允许满足条件的 TIME_WAIT 连接复用，但这种参数要谨慎修改。整体上我会优先从减少主动关闭和连接复用入手，内核参数只是最后的辅助优化手段。"
+    },
+    {
+      "id": "card-1788360496093-bvffc",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "为什么有TIME_WAIT状态，为什么是2MSL时间",
+      "briefAnswer": "TIME_WAIT 主要是为了两个目的：一是最后的 ACK 丢失后还能接收对方重传的 FIN 并再次回复 ACK，保证连接可靠关闭；二是让旧连接中的延迟报文全部失效，避免影响相同四元组的新连接。等待 2MSL，就是为了覆盖一次最长的 ACK 发送和 FIN 重传过程，同时让旧报文彻底消失。",
+      "detailedAnswer": "TIME_WAIT 一般出现在主动关闭连接的一方，主要有两个作用。第一是保证最后一个 ACK 能可靠送达，因为最后这个 ACK 可能丢失，如果对方没收到，就会重新发送 FIN，而主动关闭方处于 TIME_WAIT 时还能收到这个 FIN，并再次回复 ACK，保证连接能够正常关闭。第二是让这个 TCP 连接中可能残留在网络里的旧报文彻底失效，避免马上建立相同四元组的新连接后，旧连接的延迟报文被新连接误接收。之所以等待 2MSL，MSL 指的是一个 TCP 报文在网络中的最大生存时间，2MSL 可以覆盖最后一个 ACK 发过去以及对方重传 FIN 回来的最长时间，同时也能让旧连接里的报文基本全部消失。所以我理解，TIME_WAIT 的核心就是 保证四次挥手可靠结束，同时隔离旧连接和新连接的数据���"
+    },
+    {
+      "id": "card-1788360291624-84k1y",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "为什么挥手需要四次？",
+      "briefAnswer": "● 关闭连接时，客户端向服务端发送FIN报文，仅表示客户端不再发送数据，但还能接受数据\n● 服务端收到客户端的FIN报文后，先回一个ACK报文，而服务端可能还有数据需要处理和发送，等到服务端处理完毕，再发送一个FIN报文给客户端\n服务端通常需要等待数据完成处理和发送，所以服务端的ACK报文和FIN报文是分开来发送的，总计四次",
+      "detailedAnswer": "● 关闭连接时，客户端向服务端发送FIN报文，仅表示客户端不再发送数据，但还能接受数据\n● 服务端收到客户端的FIN报文后，先回一个ACK报文，而服务端可能还有数据需要处理和发送，等到服务端处理完毕，再发送一个FIN报文给客户端\n服务端通常需要等待数据完成处理和发送，所以服务端的ACK报文和FIN报文是分开来发送的，总计四次"
+    },
+    {
+      "id": "card-1788360215001-diopp",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "讲解TCP四次挥手",
+      "briefAnswer": "TCP 四次挥手可以记成：\n第一次：客户端 FIN，表示我不发了。\n第二次：服务器 ACK，表示我知道了。\n第三次：服务器 FIN，表示我也发完了。\n第四次：客户端 ACK，表示收到，然后进入 TIME_WAIT。\n\n核心原因：\n\nTCP 是全双工通信，两个方向要分别关闭。\n服务端收到 FIN 后，可能还有数据没发完，所以 ACK 和 FIN 不能像握手时那样一定合并。\n客户端最后进入 TIME_WAIT，保证最后 ACK 能重传，也避免旧报文影响新连接。",
+      "detailedAnswer": "TCP 四次挥手主要是为了安全地关闭一个全双工连接。假设客户端主动关闭连接，第一次挥手，客户端发送 FIN 报文，表示“我的数据已经发送完了，后面不会再发数据”，客户端进入 FIN_WAIT_1 状态。第二次挥手，服务器收到 FIN 后返回 ACK，表示“我知道你不再发数据了”，这时客户端进入 FIN_WAIT_2，但是服务器可能还有数据没有发送完，所以连接还不能直接关闭。等服务器剩余数据发送完成后，第三次挥手，服务器再发送一个 FIN，表示“我的数据也发送完了，可以关闭连接了”。第四次挥手，客户端收到服务器的 FIN 后返回 ACK，然后进入 TIME_WAIT 状态；服务器收到这个 ACK 后就可以真正关闭连接。客户端不会立即关闭，而是等待一段时间后再关闭，这主要是为了保证最后一个 ACK 能够到达服务器，同时避免旧连接中的延迟报文影响后面建立的新连接。\n\n之所以需要四次，而三次握手只需要三次，是因为建立连接时，服务器的 SYN 和 ACK 可以一起发送；但是关闭连接时，收到对方 FIN 只代表“对方不再发送数据”，自己可能还有数据没发送完，所以 ACK 和 FIN 通常不能一起发送，需要分成两次，因此就是四次挥手。"
+    },
+    {
+      "id": "card-1788360029691-lyae3",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "为什么是tcp是三次握手？不是两次？",
+      "briefAnswer": "TCP 不能两次握手，主要有两个原因：\n两次无法让服务端确认客户端收到了自己的 SYN，双方通信能力和初始序列号没有完全确认。\n防止历史失效的 SYN 报文导致服务端错误建立连接、浪费资源。",
+      "detailedAnswer": "TCP 之所以需要三次握手，核心是为了让客户端和服务端双方都确认自己的发送能力、接收能力是正常的，同时完成双方初始序列号的同步。第一次客户端发送 SYN，服务端收到后，只能确认客户端能发送、自己能接收；第二次服务端返回 SYN + ACK，客户端收到以后，可以确认服务端既能接收也能发送，同时自己也能接收。但是到这里，服务端还不知道客户端到底有没有收到自己的 SYN，也就是说服务端的发送能力和客户端的接收能力还没有得到服务端自己的确认，所以客户端必须再发送第三次 ACK。服务端收到第三次 ACK 后，双方才都能确认连接是双向可用的。另外，如果只有两次握手，还可能出现网络中一个已经失效的旧 SYN 报文延迟到达服务端，服务端收到后直接建立连接并分配资源，但客户端实际上并没有要建立这个连接，会造成无效连接和资源浪费。所以第三次握手既能够确认服务端的 SYN 已经被客户端收到，也能够避免历史失效连接请求导致错误建立连接"
+    },
+    {
+      "id": "card-1788359868224-swvak",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "TCP三次握手过程",
+      "briefAnswer": "TCP 三次握手可以记成：\n第一次：客户端发 SYN，seq=x。\n第二次：服务器回 SYN+ACK，seq=y，ack=x+1。\n第三次：客户端回 ACK，ack=y+1。\n核心目的有两个：\n确认双方的发送、接收能力都正常。\n同步双方的初始序列号，为后续可靠传输做准备。",
+      "detailedAnswer": "TCP 三次握手主要是为了建立可靠连接，并确认客户端和服务器双方的发送和接收能力都正常。第一次握手，客户端向服务器发送一个 SYN 报文，同时带上客户端的初始序列号 seq=x，表示客户端想建立连接，此时客户端进入 SYN_SENT 状态。第二次握手，服务器收到后返回 SYN + ACK 报文，其中 ack=x+1 表示已经收到客户端的 SYN，同时服务器也会发送自己的初始序列号 seq=y，此时服务器进入 SYN_RCVD 状态。第三次握手，客户端收到服务器的 SYN + ACK 后，再发送一个 ACK 报文，ack=y+1，表示服务器的 SYN 也收到了，此时客户端进入 ESTABLISHED 状态，服务器收到这个 ACK 后也进入 ESTABLISHED 状态，连接正式建立。\n\n之所以一定要三次，是因为双方都需要确认自己的发送能力和接收能力都正常。第一次握手只能让服务器知道“客户端能发、服务器能收”���第二次握手让客户端知道“服务器能收、服务器能发、客户端能收”；第三次握手再让服务器确认“客户端��实能收到服务器的数据”。如果只有两次握手，服务器无法确认客户端是否真正收到了自己的响应，而且还可能因为历史失效连接请求导致服务器误建立连接。"
+    },
+    {
+      "id": "card-1788359636619-ivcjq",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "Https加密过程",
+      "briefAnswer": "HTTPS = HTTP + TLS，过程可以记成：\nClientHello → ServerHello + 数字证书 → 客户端验证证书 → ECDHE 协商共享密钥 → 生成对称会话密钥 → Finished → 对称加密传输 HTTP 数据。\n\n核心记 3 点：\n\n数字证书：验证服务器身份，防止冒充。\n非对称密码学 / ECDHE：安全协商会话密钥。\n对称加密：真正传输 HTTP 数据，因为效率更高。",
+      "detailedAnswer": "HTTPS 本质上就是 HTTP + TLS。它并不是一直使用非对称加密来传输数据，而是先通过 TLS 握手完成身份认证和密钥协商，之后真正的 HTTP 数据使用对称加密传输。具体来说，客户端首先发送 ClientHello，里面包含支持的 TLS 版本、加密套件、随机数以及密钥交换相关参数；服务器返回 ServerHello，确定 TLS 版本和加密算法，同时把自己的数字证书发送给客户端。客户端会验证证书是否由可信 CA 签发、域名是否匹配、证书是否过期，从而确认服务器身份。验证成功以后，客户端和服务器通过 ECDHE 等密钥交换算法，各自计算出相同的共享秘密，再结合握手过程中的随机数据派生出后续通信使用的对称会话密钥。双方再通过 Finished 消息确认握手过程没有被篡改。TLS 握手完成之后，客户端发送的 HTTP 请求和服务器返回的 HTTP 响应，就主要使用 AES、ChaCha20 这类对称加密算法进行加密，同时通过 AEAD 等机制保证数据完整性。所以我理解 HTTPS 的核心就是：证书解决服务器身份认证，非对称密码学完成安全的密钥协商，最终使用对称加密传输业务数据。"
+    },
+    {
+      "id": "card-1788359395014-xzk7u",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "Quic 协议",
+      "briefAnswer": "QUIC 是 HTTP/3 的底层传输协议，基于 UDP，但自己实现了可靠传输和拥塞控制。\n\n核心记 4 点：\n\n基于 UDP，但可靠：自己实现 ACK、重传、拥塞控制。\n连接更快：集成 TLS 1.3，支持 1-RTT、0-RTT。\n解决 TCP 队头阻塞：不同 Stream 相互独立，一个丢包不会阻塞其他 Stream。\n支持连接迁移：通过 Connection ID 标识连接，WiFi 切 5G 也可以保持连接。",
+      "detailedAnswer": "QUIC 是一种基于 UDP 实现的可靠传输协议，现在主要作为 HTTP/3 的底层传输协议。它虽然基于 UDP，但并不是不可靠传输，而是在 UDP 之上自己实现了可靠传输、拥塞控制、丢包重传等机制，同时还把 TLS 1.3 集成到了协议内部。相比 TCP，QUIC 一个比较大的优势是连接建立更快，首次建立连接通常可以做到 1-RTT，已经连接过的服务器还可以利用 0-RTT 更快地发送数据。第二个优势是解决了 TCP 层面的队头阻塞问题，QUIC 在一个连接中支持多个独立的 Stream，如果其中一个 Stream 发生丢包，只会阻塞这个 Stream，不会像 HTTP/2 基于 TCP 那样导致整个连接中的其他请求都被阻塞。第三个特点是支持连接迁移，TCP 连接通常依赖源 IP、源端口、目标 IP、目标端口来标识连接，比如手机从 WiFi 切换到 5G，IP 地址发生变化，TCP 可能需要重新建立连接；QUIC 使用 Connection ID 标识连接，所以网络切换之后可以继续复用原来的连接。因此我理解 QUIC 的核心就是：用 UDP 作为基础，在用户态重新实现可靠传输，并结合 TLS、多路复用和连接迁移，从而降低延迟，改善 HTTP/2 基于 TCP 的一些问题。"
+    },
+    {
+      "id": "card-1788359065850-xkxtm",
+      "category": "计算机网络",
+      "proficiency": "生疏",
+      "question": "讲解http",
+      "briefAnswer": "HTTP 是一个应用层、请求-响应、无状态协议，主要用于客户端和服务器通信\n报文：请求行/请求头/请求体，响应状态行/响应头/响应体。\n常见内容：GET、POST、PUT、DELETE，以及 2xx、3xx、4xx、5xx 状态码。\n版本演进：HTTP/1.1 长连接，HTTP/2 多路复用，HTTP/3 基于 QUIC。\nHTTPS：HTTP + TLS，提供加密、身份认证和完整性保护。",
+      "detailedAnswer": "HTTP 是一个应用层的请求-响应协议，主要用来完成客户端和服务器之间的数据通信。它本身是无状态的，也就是说服务器默认不会记住前一次请求的状态，所以实际项目中通常会配合 Cookie、Session 或 Token 来维护登录状态。HTTP 请求主要由请求行、请求头和请求体组成，响应则由状态行、响应头和响应体组成。常见的请求方法有 GET、POST、PUT、DELETE，常见状态码��� 200 表示成功，301、302 表示重定向，400 表示客户端请求有问题，401 表示未认证，403 表示没有权限，404 表示资源不存在，500 表示服务器内部异常。HTTP 底层通常依赖 TCP，HTTP/1.1 引入了长连接，一个 TCP 连接可以复用多个请求；HTTP/2 又增加了二进制分帧和多路复用，提高并发传输效率；HTTP/3 则基于 QUIC，也就是基于 UDP 的传输机制，进一步解决连接建立和队头阻塞的问题。另外 HTTPS 本质上就是 HTTP + TLS，通过加密、身份认证和完整性校验来保证传输安全。"
+    },
+    {
+      "id": "card-1788356927291-8tcyf",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "SpringBoot 的启动流程",
+      "briefAnswer": "main() → SpringApplication.run() → 准备 Environment → 创建 IOC 容器 → refresh() 初始化容器 → 自动配置和 Bean 创建 → 启动内嵌 Tomcat → 执行 Runner → 启动完成。\n\n其中最核心的是 SpringApplication.run() 负责流程编排，refresh() 负责真正初始化 IOC 容器。",
+      "detailedAnswer": "首先，程序会执行 main 方法，然后调用 SpringApplication.run()；Spring Boot 会先创建并初始化 SpringApplication 对象，判断当前应用类型，比如是普通应用还是 Web 应用，同时加载一些初始化器和监听器。接着会准备运行环境，也就是读取 application.yml、application.properties、系统环境变量、启动参数这些配置，并创建对应的 Environment。然后 Spring Boot 会根据应用类型创建 IOC 容器，比如 Web 项目通常会创建 AnnotationConfigServletWebServerApplicationContext，之后执行容器的 refresh()，这一步是整个启动流程的核心。在 refresh() 过程中，会完成 BeanDefinition 的加载、BeanFactory 的初始化、BeanPostProcessor 的注册，以及非懒加载单例 Bean 的实例化和依赖注入。同时 Spring Boot 的自动配置也会在这个过程中生效，通过 @EnableAutoConfiguration 根据类路径、配置条件等自动注册需要的 Bean。对于 Web 项目，还会在容器刷新过程中创建并启动内嵌的 Tomcat。最后，IOC 容器初始化完成后，会执行 ApplicationRunner 和 CommandLineRunner，然后发布启动完成事件，到这里 Spring Boot 应用就正式启动完成了。\nSpringApplication.run() 负责整个启动流程的编排，另一个是 ApplicationContext.refresh() 真正完成 Spring IOC 容器的初始化。自动配置、Bean 创建、依赖注入、Tomcat 启动这些核心操作，最终基本都围绕 refresh() 展开。"
+    },
+    {
+      "id": "card-1788356721526-tprom",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "Spring 中的设计模式,你了解哪些设计模式",
+      "briefAnswer": "Spring 常见设计模式我主要了解 单例、工厂、代理、模板方法、观察者、适配器。其中最重要的是：Bean 默认单例；IOC 的 BeanFactory 体现工厂模式；AOP 和事务体现代理模式，底层主要是 JDK 动态代理和 CGLIB；JdbcTemplate 是模板方法；事件机制是观察者模式；HandlerAdapter 是适配器模式。",
+      "detailedAnswer": "我了解的 Spring 中比较常见的设计模式主要有单例模式、工厂模式、代理模式、模板方法模式、观察者模式和适配器模式。比如 Spring Bean 默认是单例的，不过这里的单例是指同一个 IOC 容器中，同一个 Bean 通常只有一个实例；工厂模式主要体现在 BeanFactory 和 ApplicationContext，对象的创建和依赖管理都交给 Spring 容器；代理模式是 Spring 里非常重要的一个，比如 AOP 和 @Transactional，Spring 会通过 JDK 动态代理或者 CGLIB 创建代理对象，在目标方法前后加入事务、日志等增强逻辑。模板方法模式比较典型的是 JdbcTemplate，Spring 把获取连接、异常处理、释放资源这些公共流程封装起来，我们只需要关注具体的 SQL 操作。另外 Spring 的事件机制，比如 ApplicationEventPublisher 和 ApplicationListener，体现了观察者模式；Spring MVC 中的 HandlerAdapter 则体现了适配器模式，用来适配不同类型的 Handler。实际面试中我觉得 Spring 最核心、最常见的还是工厂模式、单例模式和代理模式。"
+    },
+    {
+      "id": "card-1788356387192-4fh3h",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "Spring MVC 的执行流程",
+      "briefAnswer": "Spring MVC 核心流程就是：DispatcherServlet 接收请求 → HandlerMapping 找 Controller → HandlerAdapter 执行方法 → 处理返回值 → 返回响应。如果返回页面走 ViewResolver，如果是 REST 接口则通过 HttpMessageConverter 转成 JSON。",
+      "detailedAnswer": "Spring MVC 的执行流程核心可以概括成：请求先到 DispatcherServlet，再找到对应 Controller，执行后返回结果。具体来说，请求首先进入前端控制器 DispatcherServlet，它会通过 HandlerMapping 根据请求路径找到对应的 Handler，也就是 Controller 方法；然后通过 HandlerAdapter 去真正调用这个方法。Controller 执行完成后，如果返回的是页面，会生成 ModelAndView，再经过 ViewResolver 解析视图并渲染；如果是 @ResponseBody 或 @RestController，则会通过 HttpMessageConverter 把 Java 对象转换成 JSON 等格式，最后由 DispatcherServlet 把响应返回给客户端。所以整个流程可以记成：DispatcherServlet 接收请求 → HandlerMapping 找处理器 → HandlerAdapter 执行 Controller → 处理返回值 → 返回响应。"
+    },
+    {
+      "id": "card-1788355049239-lveo0",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "SpringBoot 自动装配的原理",
+      "briefAnswer": "Spring Boot 自动装配入口是 `@EnableAutoConfiguration`，启动时通过 `AutoConfigurationImportSelector` 加载自动配置类，再根据各种 `@Conditional` 条件判断是否生效，最后把符合条件的 Bean 注册到 IOC 容器。核心流程就是：**加载配置 → 条件判断 → 自动注册 Bean**。",
+      "detailedAnswer": "Spring Boot 自动装配的核心就是：**启动时根据当前项目的依赖和配置，自动把需要的 Bean 注册到 Spring 容器中**。入口是 `@SpringBootApplication`，它里面包含了 `@EnableAutoConfiguration`。启动时，Spring Boot 会通过 `AutoConfigurationImportSelector` 加载自动配置类；在 自动配置导入选择器类 里会读取（该项目和该项目引用的）Jar 包的 META-INF/spring.factories文件。然后再通过 `@ConditionalOnClass`、`@ConditionalOnMissingBean`、`@ConditionalOnProperty` 等条件注解判断当前环境是否满足条件，满足才创建对应的 Bean。比如项目引入了 Redis 相关依赖并配置了 Redis，Spring Boot 就可以自动创建 Redis 相关组件；如果我们自己已经定义了同类型 Bean，很多自动配置就会选择不再创建。所以自动装配可以概括为：**加载自动配置类 → 条件判断 → 注册 Bean**。"
+    },
+    {
+      "id": "card-1788354800520-v47pb",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "Spring Bean 的作用域",
+      "briefAnswer": "Spring Bean 默认是 singleton 单例，此外还有 prototype、request、session、application。最常用的是 singleton，但单例 Bean 被多线程共享时，要注意可变成员变量带来的线程安全问题。",
+      "detailedAnswer": "Spring Bean 常见的作用域主要有 singleton、prototype、request、session 和 application。其中 singleton 是默认作用域，表示一个 Spring 容器中这个 Bean 通常只有一个实例，比较适合无状态的 Service、DAO；prototype 表示每次从容器获取 Bean 时都会创建一个新的实例；request 表示一次 HTTP 请求对应一个 Bean；session 表示一个 HTTP Session 对应一个 Bean；application 表示整个 Web 应用范围内共享一个 Bean。实际开发里最常见的还是 singleton，但因为它会被多个线程共享，所以如果 Bean 内部保存可变状态，就要注意线程安全问题"
+    },
+    {
+      "id": "card-1788354645221-y7qrj",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "声明式事务的粒度问题",
+      "briefAnswer": "声明式事务通常以方法为粒度，如果方法中包含耗时操作，会导致事务时间过长、锁和数据库连接占用时间增加，影响并发性能。因此要尽量缩小事务范围，只包住必要的数据库操作；需要更细粒度控制时可以使用 TransactionTemplate",
+      "detailedAnswer": "Spring 声明式事务的一个常见问题就是**事务粒度不好控制**。`@Transactional` 一般是加在方法上的，所以整个方法���会处在同一个事务中。如果一个方法里除了数据库操作，还包含远程调用、文件操作或者比较耗时的业务逻辑，就会导致事务持续时间过长，数据库连接和锁被长时间占用，降低系统并发性能，严重时还可能增加死锁概率。所以实际开发中一般会尽量**缩小事务范围**，只把真正需要保证原子性的数据库操作放到事务里，像 RPC、HTTP 请求这类耗时操作尽量放在事务之外。如果需要更细粒度地控制事务，可以使用 `TransactionTemplate` 这种编程式事务。"
+    },
+    {
+      "id": "card-1788354538030-901o9",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "讲述Spring 事务",
+      "briefAnswer": "Spring 事务主要通过 @Transactional 实现，底层是 AOP + 动态代理。代理会在方法执行前开启事务，成功就提交，异常就按规则回滚；同时支持传播行为和隔离级别。常见注意点是：默认回滚 RuntimeException 和 Error，以及同类内部自调用可能导致事务失效。",
+      "detailedAnswer": "Spring 事务主要通过 @Transactional 实现，底层是 AOP + 动态代理。代理会在方法执行前开启事务，成功就提交，异常就按规则回滚；同时支持传播行为和隔离级别。常见注意点是：默认回滚 RuntimeException 和 Error，以及同类内部自调用可能导致事务失效。主要分为编程式事务和声明式事务两种。"
+    },
+    {
+      "id": "card-1788354049010-2n1y6",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "Spring 常见注解及其作用",
+      "briefAnswer": "Spring 常见注解可以记成四类：**Bean 管理**：`@Component/@Service/@Repository/@Controller`；**依赖注入**：`@Autowired/@Qualifier/@Resource`；**配置**：`@Configuration/@Bean/@Value`；**Web**：`@RestController/@RequestMapping/@RequestParam/@PathVariable/@RequestBody`。另外 `@Transactional` 用于声明事务。",
+      "detailedAnswer": "Spring 常见注解我一般分几类来记。\n**Bean 管理相关**有 `@Component`，表示把类交给 Spring 容器管理，`@Service`、`@Repository`、`@Controller` 本质上都是 `@Component` 的特殊形式，分别用于业务层、持久层和控制层；\n**依赖注入相关**有 `@Autowired`，按照类型自动注入，`@Qualifier` 可以配合它指定具体 Bean，`@Resource` 默认更偏向按名称注入；\n**配置相关**有 `@Configuration` 表示配置类，`@Bean` 用于把方法返回的对象注册到 IOC 容器，`@Value` 用来读取配置值；\n**Web 开发相关**有 `@RestController`，相当于 `@Controller + @ResponseBody`，`@RequestMapping`、`@GetMapping`、`@PostMapping` 用于映射请求地址，`@RequestParam` 获取请求参数，`@PathVariable` 获取路径参数，`@RequestBody` 接收 JSON 请求体；另外比较常用的还有 `@Transactional`，用于声明事务，它底层是基于 Spring AOP 实现的。"
+    },
+    {
+      "id": "card-1788353955710-1beh5",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "Spring AOP是什么?",
+      "briefAnswer": "Spring AOP 就是把日志、事务、权限等公共横切逻辑统一抽取出来，避免和业务代码耦合。它底层主要通过动态代理实现，常见有 JDK 动态代理和 CGLIB，@Transactional 本质上也是基于 AOP 实现的。",
+      "detailedAnswer": "Spring AOP 就是面向切面编程，主要用于把日志、事务、权限校验、性能监控这类和核心业务无关、但很多地方都会重复出现的横切逻辑抽取出来统一处理。Spring AOP 的核心实现是动态代理：如果目标类实现了接口，一般可以使用 JDK 动态代理；如果没有实现接口，通常使用 CGLIB 生成目标类的子类代理对象。调用目标方法时，实际上先经过代理对象，由代理在方法执行前后织入增强逻辑。AOP 里比较常见的概念有切面 Aspect、切点 Pointcut、通知 Advice 和连接点 JoinPoint。Spring 的声明式事务 @Transactional 本质上就是基于 AOP 实现的，所以如果发生同类内部方法自调用，没有经过代理对象，就可能导致事务或者其他 AOP 增强失效。"
+    },
+    {
+      "id": "card-1788353663000-qhct3",
+      "category": "Spring Boot",
+      "proficiency": "生疏",
+      "question": "讲述Spring IOC",
+      "briefAnswer": "IOC 就是把对象的创建和依赖管理交给 Spring 容器，而不是自己 new。DI 是 IOC 的实现方式，Spring 通过注入依赖来降低对象之间的耦合，核心容器是 BeanFactory 和 ApplicationContext。",
+      "detailedAnswer": "Spring IOC 就是控制反转，核心思想是把对象的创建、依赖关系维护和生命周期管理从程序员手里交给 Spring 容器来负责。以前我们需要自己通过 new 创建对象，比如 new UserService()，对象之间的依赖也要自己组装；用了 IOC 以后，我们只需要把类交给 Spring 管理，Spring 会根据配置或者注解创建 Bean，并把它依赖的对象自动注入进来。这样做的好处是降低了对象之间的耦合，方便后续替换实现、测试和统一管理对象。Spring 中 IOC 的核心容器主要是 BeanFactory 和 ApplicationContext，我们实际开发中通常使用 ApplicationContext，而依赖注入 DI 可以理解为 IOC 的具体实现方式，比如通过构造器、Setter 或 @Autowired 把依赖对象注入进来。"
+    },
+    {
+      "id": "card-1788339934880-1irwd",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "什么是慢sql",
+      "briefAnswer": "慢 SQL 就是执行时间超过设定阈值的 SQL，MySQL 可以通过慢查询日志记录。常见原因有索引失效、全表扫描、扫描行数过多、排序分组开销大、锁等待等。",
+      "detailedAnswer": "慢 SQL 就是执行时间比较长、资源消耗比较大的 SQL 语句。在 MySQL 中通常可以通过慢查询日志来记录这类 SQL，当一条 SQL 的执行时间超过 long_query_time 设置的阈值时，就会被记录到慢查询日志中。慢 SQL 常见原因包括：没有走索引导致全表扫描、索引设计不合理、扫描数据量过大、复杂的排序或分组、频繁回表、锁等待等。实际排查时，一般先从慢查询日志定位 SQL，再通过 EXPLAIN 分析执行计划，找到具体瓶颈。"
+    },
+    {
+      "id": "card-1788339829476-qorbu",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "你是怎么优化慢SQL的？",
+      "briefAnswer": "慢 SQL 优化我一般按这个顺序：先定位慢 SQL → EXPLAIN 看执行计划 → 优化索引和 SQL 写法 → 必要时做分页、缓存或拆分 → 最后验证耗时和扫描行数。 核心关注就是：索引有没有用上、扫描数据是不是太多、有没有额外排序和临时表。",
+      "detailedAnswer": "我优化慢 SQL 一般会先通过慢查询日志或者监控工具定位具体 SQL，然后用 EXPLAIN 分析执行计划，重点看 type、key、rows、Extra，判断有没有全表扫描、索引失效、扫描行数过大、Using filesort 或 Using temporary。如果是索引问题，我会根据 where、join、order by、group by 条件设计合适的单列索引或联合索引，并尽量满足最左匹配原则、使用覆盖索引减少回表；如果是 SQL 本身的问题，会避免 select *、对索引列做函数或计算、前缀 %like，以及不必要的子查询和大范围扫描。对于数据量特别大的场景，还会考虑分页优化、拆分复杂 SQL、分库分表或者缓存热点数据。优化之后我会再次通过执行计划和实际耗时验证效果，而不是只看有没有走索引。"
+    },
+    {
+      "id": "card-1788339674243-lzfh6",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "分析 MySQL 执行计划",
+      "briefAnswer": "执行计划主要看 EXPLAIN 的 type、key、rows、Extra。type 看扫描方式，key 看有没有走索引，rows 看扫描行数，Extra 重点关注 Using index、Using filesort、Using temporary。核心就是判断：有没有走索引、扫描多不多、有没有额外排序或临时表。",
+      "detailedAnswer": "分析 MySQL 执行计划一般使用 EXPLAIN，重点看几个字段：首先是 type，表示访问类型，性能通常从 ALL < index < range < ref < eq_ref < const 逐渐变好，如果看到 ALL 一般说明是全表扫描；然后看 key，表示实际使用了哪个索引，如果是 NULL 就说明没有走索引；再看 rows，表示优化器预估需要扫描多少行，通常越少越好；filtered 表示经过条件过滤后预计剩余数据的比例；最后重点看 Extra，比如 Using index 表示使用了覆盖索引，通常比较好，Using where 表示还需要通过 where 条件过滤，Using filesort 表示额外排序，Using temporary 表示使用临时表，这两个通常需要重点关注。实际优化时，我一般会结合 type、key、rows、Extra 判断有没有索引失效、扫描行数是否过大，以及是否存在额外排序或临时表。"
+    },
+    {
+      "id": "card-1788339344165-fobok",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "执行SQL查询语句的过程",
+      "briefAnswer": "SQL 查询流程可以记成：连接器 → 解析器 → 优化器 → 执行器 → 存储引擎。连接器负责连接和权限，解析器检查 SQL，优化器选择最优执行计划，执行器调用 InnoDB，InnoDB 再通过 索引 + Buffer Pool 查数据，最后返回结果。",
+      "detailedAnswer": "一条 SELECT SQL 在 MySQL 中大致会经历 连接器、解析器、优化器、执行器和存储引擎 这几个阶段。首先客户端通过连接器和 MySQL 建立连接并进行权限校验；然后解析器会对 SQL 做词法、语法分析，判断 SQL 是否合法，并生成对应的语法树；接着优化器会根据索引、表统计信息和查询成本，决定使用哪个索引、表的连接顺序以及具体的执行计划；之后执行器按照执行计划调用存储引擎接口获取数据。������� InnoDB 为例，存储引擎会通过 B+ 树索引查找对应的数据页，如果页已经在 Buffer Pool 中就直接读取，如果不在就从磁盘加载到 Buffer Pool，再把结果返回给执行器，最后经过筛选、排序、聚合等处理后返回给客户端。需要注意的是，MySQL 8.0 已经移除了以前的 Query Cache，所以现在通常不再把“查询缓存”作为执行流程的一部分。"
+    },
+    {
+      "id": "card-1788339183759-reu09",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "在redo log中,直接把脏页数据写入磁盘 和    把日志记录写入磁盘不都是一次磁盘IO吗？为什么选择后者？",
+      "briefAnswer": "不是“一次 I/O 就一样快”。刷脏页是写整个 16KB 页，而且可能是随机写；写 Redo Log 数据量更小，并且是顺序追加写。 所以先写 Redo Log 更快，后续再批量刷脏页，这就是 WAL 思想。",
+      "detailedAnswer": "虽然两种方式看起来都是“写一次磁盘”，但它们的 I/O 类型和写入量完全不一样。直接把脏页刷到磁盘，通常要把整个数据页写回去，InnoDB 默认一页是 16KB，而且这些脏页可能分散在磁盘不同位置，属于随机 I/O，成本比较高；Redo Log 记录的只是“这次修改了什么”，日志量通常比完整数据页小很多，而且 Redo Log 是顺序追加写，属于顺序 I/O，效率要高得多。所以 InnoDB 采用 WAL，也就是 Write Ahead Logging：事务提交时先把 Redo Log 持久化，不要求立刻把所有脏页刷盘，之后再由后台线程批量刷脏页。这样既保证事务提交后宕机可以恢复，又把大量随机写转换成了更高效的顺序写。"
+    },
+    {
+      "id": "card-1788338838280-73p5p",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "日志(RedoLog、UndoLog、BinLog)",
+      "briefAnswer": "Redo Log 保证持久性，宕机后用于恢复；Undo Log 保证原子性，用于回滚，同时支持 MVCC；Binlog 记录逻辑变更，用于主从复制和数据恢复。 Redo 和 Undo 属于 InnoDB 层，Binlog 属于 Server 层。",
+      "detailedAnswer": "MySQL 里比较重要的日志主要有 Redo Log、Undo Log 和 Binlog。其中 Redo Log 是 InnoDB 存储引擎层的日志，主要保证事务的持久性，采用 WAL 思想，也就是修改数据时先写日志，再由后台把脏页刷盘；如果数据库宕机，可以通过 Redo Log 恢复已经提交但还没刷到磁盘的数据。Undo Log 也是 InnoDB 层的日志，主要保证事务的原子性，它会记录数据修改前的版本，如果事务执行失败就可以通过 Undo Log 回滚，同时 Undo Log 也会为 MVCC 提供历��版本。Binlog 属于 MySQL Server 层，主要记录数据库发生的逻辑变更，比如增删改操作，主要用于主从复制和数据恢复。所以简单来说，Redo Log 解决的是“提交后的数据不能丢”，Undo Log 解决的是“失败了要能回滚”，Binlog 解决的是“数据库做过哪些修改需要被记录下来”。在事务提交时，InnoDB 还会通过 Redo Log 和 Binlog 的两阶段提交来保证两份日志之间的一致性。"
+    },
+    {
+      "id": "card-1788338629105-no3y7",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "索引失效的情况",
+      "briefAnswer": "常见索引失效：索引列做函数或计算、隐式类型转换、联合索引不满足最左匹配、like '%xxx'、部分 != / not in / is not null、or 一边无索引。另外是否走索引最终由优化器根据成本决定。",
+      "detailedAnswer": "MySQL 中常见的索引失效情况主要有几类：第一，对索引列进行函数、计算或者类型转换，比如 where year(create_time)=2026、where id+1=10，这样可能导致无法直接利用 B+ 树有序性；第二，发生隐式类型转换，比如字符串字段用数字去比较，也可能导致索引失效；第三，联合索引不满足最左前缀原则，比如索引是 (a,b,c)，查询只用 b 或 c，通常无法有效使用这个联合索引；第四，使用 like 时，如果通配符 % 放在最前面，比如 like '%abc'，因为无法确定查询起点，所以普通 B+ 树索引通常失效，而 like 'abc%' 一般可以使用索引；第五，使用 !=、<>、not in、is not null 等条件时，优化器可能判断走全表扫描成本更低，从而不使用索引；第六，使用 or 时，如果两边条件中有一边没有索引，也可能导致整体不走索引。另外还要注意，并不是写了索引条件就一定会走索引，MySQL 优化器会根据数据量、索引选择性和回表成本来估算，如果走索引成本反而更高，也可能直接选择全表扫描。"
+    },
+    {
+      "id": "card-1788338534809-jtpkn",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "如何理解 MVCC",
+      "briefAnswer": "MVCC 就是让一条数据保存多个版本，通过 Undo Log 版本链 + Read View 判断当前事务能看到哪个版本。这样普通查询可以不加锁，减少读写冲突，提高并发性能。RC 每次查询生成 Read View，RR 通常一个事务复用同一个 Read View。",
+      "detailedAnswer": "MVCC 就是多版本并发控制，核心思想是：同一条数据保留多个历史版本，让读操作尽量不加锁，从而提高并发性能。在 InnoDB 中，每条记录都会维护事务相关的信息，比如 trx_id 表示最后修改这条记录的事务 ID，roll_pointer 指向 Undo Log，通过 Undo Log 可以把一条记录串成一条历史版本链。当事务执行普通 select，也就是快照读时，会生成一个 Read View，然后根据 Read View 判断当前事务能够看到版本链中的哪个数据版本；如果最新版本对当前事务不可见，就沿着 Undo Log 版本链向前找，直到找到一个可见版本。这样读事务和写事务就不用互相阻塞。MVCC 主要用于实现 RC 和 RR 隔离级别下的快照读，其中 RC 一般是每次查询重新生成 Read View，而 RR 通常是事务第一次快照读时生成 Read View，后续复用。需要注意，像 select ... for update、update、delete 这种属于当前读，读取的是最新数据，主要还是通过锁机制保证并发安全。"
+    },
+    {
+      "id": "card-1788338386170-8dh0z",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "事务隔离级别和实现原理",
+      "briefAnswer": "四个隔离级别是 RU、RC、RR、Serializable。RU 会有脏读；RC 通过 MVCC，每次查询重新生成 Read View，解决脏读；RR 是 InnoDB 默认级别，一个事务通常复用同一个 Read View，并结合 Next-Key Lock 解决不可重复读和幻读；Serializable 通过更严格的加锁让事务串行执行，隔离最高但性能最低。",
+      "detailedAnswer": "事务隔离级别从低到高有四种：读未提交、读已提交、可重复读和串行化。读未提交基本没有隔离，可以读到其他事务还没提交的数据，所以会出现脏读；读已提交解决了脏读，在 InnoDB 中主要通过 MVCC 实现，每次普通 select 都会重新生成一个 Read View，所以第二次查询可能看到其他事务已经提交的新数据，因此还会出现不可重复读；可重复读是 MySQL InnoDB 的默认隔离级别，同一个事务中的普通快照读通常复用同一个 Read View，因此多次查询看到的数据版本基本一致，解决了不可重复读，对于当前读和修改操作，InnoDB 还会通过 记录锁、间隙锁以及 Next-Key Lock 来限制其他事务在查询范围内插入数据，从而解决幻读问题；串行化隔离级别最高，会通过更严格的加锁让事务接近串行执行，安全性最高，但并发性能也最差。所以整体上可以理解为：RC、RR 主要依靠 MVCC 控制数据可见性，涉及当前读和写操作再配合锁机制，Serializable 则主要通过更严格的锁来保证隔离。"
+    },
+    {
+      "id": "card-1788338296823-v15ex",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "并发事务的问题",
+      "briefAnswer": "并发事务主要有：脏读、不可重复读、幻读、丢失更新。脏读是读到未提交数据；不可重复读是同一条记录前后读取结果不同；幻读是同一条件前后查询出的记录数量不同；丢失更新是并发修改时一个事务覆盖了另一个事务的结果。",
+      "detailedAnswer": "并发事务主要会带来四类问题：脏读、不可重复读、幻读和丢失更新。脏读是一个事务读到了另一个事务还没有提交的数据，如果对方回滚，这次读到的数据就是无效的；不可重复读是同一个事务中，两次读取同一条记录，结果却不一样，通常是因为其他事务在中间修改并提交了这条数据；幻读是同一个事务中，两次按照相同条件查询，返回的记录数量发生了变化，通常是因为其他事务插入或删除了符合条件的数据；丢失更新则是两个事务同时修改同一条数据，后提交的事务把前一个事务的修改覆盖了。为了解决这些问题，数据库会通过事务隔离级别、MVCC 和锁机制来控制并发事务之间的数据可见性和修改冲突。"
+    },
+    {
+      "id": "card-1788338225957-lajam",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "事务的四大特性和实现原理",
+      "briefAnswer": "ACID 分别是：原子性靠 Undo Log，持久性靠 Redo Log，隔离性靠 MVCC + 锁，一致性是最终目标，由其他三个特性加数据库约束和业务逻辑共同保证。",
+      "detailedAnswer": "事务有四大特性，也就是 ACID：原子性、一致性、隔离性和持久性。原子性指一个事务中的操作要么全部成功，要么全部失败，InnoDB 主要通过 Undo Log 实现，事务执行过程中会记录修改前的数据，如果事务失败就根据 Undo Log 回滚；持久性指事务一旦提交，数据即使数据库宕机也不能丢失，主要通过 Redo Log 保证，数据修改时会先把修改记录写入 Redo Log��再由后台把脏页刷到磁盘，发生宕机后可以根据 Redo Log 恢复数据；隔离性指多个事务并发执行时尽量互不影响，InnoDB 主要通过 MVCC 和锁机制 实现，普通读通常通过 MVCC 提高并发能力，而涉及数据修改或者需要强一致性的操作会使用锁；一致性指事务执行前后，数据库都要处于合法状态，比如余额不能凭空增加、外键和唯一约束不能被破坏，它是事务最终要达到的目标，主要依赖原子性、隔离性、持久性以及数据库约束和业务逻辑共同保证"
+    },
+    {
+      "id": "card-1788338041547-p8wea",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "什么是聚集索引和二级索引",
+      "briefAnswer": "聚集索引叶子节点存完整行数据；二级索引叶子节点存索引列 + 主键值。二级索引查完整数据时通常需要根据主键再查聚集索引，也就是回表；如果字段都能从二级索引拿到，就是覆盖索引。",
+      "detailedAnswer": "在 InnoDB 中，聚集索引和二级索引最核心的区别就是叶子节点存储的内容不同。聚集索引的叶子节点存的是完整的一行数据，InnoDB 一般会使用主键作为聚集索引，所以一张表只能有一个聚集索引；而二级索引的叶子节点存的是索引列的值和对应的主键值，并不保存完整数据。比如通过 name 这个二级索引查询一条完整记录时，会先找到对应的主键 id，然后再拿这个 id 去聚集索引中查询完整数据，这个过程叫做回表。如果查询需要的字段在二级索引中已经全部包含了，就不需要回表，这种情况叫做覆盖索引"
+    },
+    {
+      "id": "card-1788336344796-t60ak",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "B树和B+树的区别",
+      "briefAnswer": "B 树是所有节点都可以存数据；B+ 树是非叶子节点只存索引，数据全部在叶子节点。因此 B+ 树一个页能放更多索引，树更矮、磁盘 I/O 更少；同时叶子节点有序并用链表连接，所以范围查询更高效。",
+      "detailedAnswer": "B 树是所有节点都可以存数据；B+ 树是非叶子节点只存索引，数据全部在叶子节点。因此 B+ 树一个页能放更多索引，树更矮、磁盘 I/O 更少；同时叶子节点有序并用链表连接，所以范围查询更高效。\n\n第一，数据存放位置不同。B 树的非叶子节点和叶子节点都可以存放真实数据；而 B+ 树的非叶子节点只存索引 key 和子节点指针，真正的数据只存放在叶子节点。\n\n第二，树的高度通常不同。因为 InnoDB 一个页默认是 16KB，B+ 树非叶子节点不存完整数据，所以一个页能放更多索引项，分叉更多，树通常更矮，因此查询时磁�� I/O 次数更少。\n\n第三，范围查询能力不同。B+ 树的叶子节点是有序的，并且叶子节点之间通过链表连接，所以找到范围起点之后，可以直接顺着叶子节点扫描，非常适合 between、>、< 这类范围查询。B 树没有这种叶子链表结构，范围查询没有 B+ 树方便。\n\n所以数据库索引更倾向使用 B+ 树，核心原因就是：更矮、I/O 更少、范围查询更高效。"
+    },
+    {
+      "id": "card-1788334865592-9dgsx",
+      "category": "MySQL",
+      "proficiency": "生疏",
+      "question": "为什么 MySQL 使用 B+ 树作为索引？",
+      "briefAnswer": "B+ 树适合 InnoDB，主要因为树矮、磁盘 I/O 少、非叶子节点能存更多索引、叶子节点有序且链表连接，适合范围查询。",
+      "detailedAnswer": "B+ 树适合 InnoDB，主要因为树矮、磁盘 I/O 少、非叶子节点能存更多索引、叶子节点有序且链表连接，适合范围查询。\n\nInnoDB 使用 B+ 树作为索���，主要是为了**减少磁盘 I/O，同时支持高效的范围查询**。\nInnoDB 默认一页是 16KB，B+ 树的一个节点通常对应一个页。查询数据时需要从根节点一层层往下找，所以可以近似理解为：**树越高，需要的磁盘 I/O 次数越多**。\n\nB+ 树是多叉树，而且非叶子节点只存索引和子节点指针，不存完整数据，所以一个 16KB 的页里可以放很多索引项，分叉非常多，树的高度通常只有 3～4 层，即使数据量很大，查询需要的 I/O 次数也比较少。\n\n另外，B+ 树的叶子节点是有序的，并且通过链表连接，所以像 `between`、`>`、`<` 这种范围查询，只需要先定位到起始位置，再顺着叶子节点扫描即可。\n\n相比之下，红黑树分叉少、树高较高；Hash 虽然等值查询快，但是不适合范围查询。因此 InnoDB 综合选择了 B+ 树。"
+    }
+  ]
+}
