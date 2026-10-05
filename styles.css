@@ -12,7 +12,6 @@
   --radius: 8px;
 }
 
-/* 八股卡片：用更少的表单字段，换取更快的知识沉淀。 */
 .simple-card-page {
   background: #f3f0e9;
 }
@@ -2081,3 +2080,273 @@ button:disabled {
   }
 }
 }
+
+/* Focus the standalone review page on the card, especially on touch screens. */
+.simple-warning-close {
+  flex: 0 0 36px;
+  min-width: 36px;
+  min-height: 36px;
+  margin-left: auto;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.simple-warning-close:hover {
+  background: rgb(101 69 11 / 9%);
+}
+
+.simple-filter-details > summary,
+.simple-stats-details > summary {
+  display: none;
+}
+
+.simple-filter-details > summary:focus-visible,
+.simple-stats-details > summary:focus-visible,
+.simple-warning-close:focus-visible {
+  outline: 3px solid rgba(217, 154, 36, 0.45);
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .simple-card-page .simple-card-shell {
+    width: 100%;
+    padding: 10px 14px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .simple-card-page .simple-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0 14px;
+  }
+
+  .simple-card-page .topbar h1 {
+    max-width: 100%;
+    font-size: clamp(19px, 5.7vw, 24px);
+    letter-spacing: 0;
+  }
+
+  .simple-card-page .top-actions {
+    justify-content: flex-end;
+  }
+
+  .simple-card-page #flipButton {
+    min-height: 44px;
+    padding: 0 13px;
+    border-radius: 12px;
+  }
+
+  .simple-card-page .simple-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding-top: 0;
+  }
+
+  .simple-card-page .simple-study-zone {
+    order: 1;
+    gap: 10px;
+  }
+
+  .simple-card-page .simple-flashcard {
+    min-height: clamp(320px, 56svh, 500px);
+    border-radius: 16px;
+    box-shadow: 0 10px 26px rgba(63, 56, 45, 0.1);
+  }
+
+  .simple-card-page .simple-card-face {
+    padding: 20px 18px 24px;
+  }
+
+  .simple-card-page .simple-card-meta span {
+    max-width: 58%;
+    overflow: hidden;
+    padding: 5px 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .simple-card-page .simple-side-label {
+    margin-top: clamp(22px, 5vh, 40px);
+  }
+
+  .simple-card-page .simple-card-face h2 {
+    font-size: clamp(22px, 6vw, 29px);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .simple-card-page .simple-answer {
+    font-size: 16px;
+    line-height: 1.78;
+    overflow-wrap: anywhere;
+  }
+
+  .simple-card-page .simple-review-actions {
+    gap: 8px;
+  }
+
+  .simple-card-page .simple-review-actions button {
+    min-height: 48px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+
+  .simple-card-page .simple-review-note {
+    font-size: 12px;
+  }
+
+  .simple-card-page .simple-filter-panel,
+  .simple-card-page .simple-stats-panel {
+    order: 2;
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .simple-card-page .simple-filter-panel input {
+    min-height: 46px;
+    margin-top: 7px;
+    font-size: 16px;
+  }
+
+  .simple-card-page .simple-filter-details,
+  .simple-card-page .simple-stats-details {
+    margin-top: 8px;
+  }
+
+  .simple-card-page .simple-filter-details > summary,
+  .simple-card-page .simple-stats-details > summary {
+    display: flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 700;
+    list-style: none;
+  }
+
+  .simple-card-page .simple-filter-details > summary::-webkit-details-marker,
+  .simple-card-page .simple-stats-details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .simple-card-page .simple-filter-details > summary::after,
+  .simple-card-page .simple-stats-details > summary::after {
+    content: "+";
+    color: var(--blue);
+    font-size: 21px;
+    font-weight: 500;
+  }
+
+  .simple-card-page .simple-filter-details[open] > summary::after,
+  .simple-card-page .simple-stats-details[open] > summary::after {
+    content: "−";
+  }
+
+  .simple-card-page .simple-filter-content,
+  .simple-card-page .simple-stats-content {
+    padding-top: 4px;
+  }
+
+  .simple-card-page .simple-filter-panel .filter-block {
+    margin-top: 6px;
+  }
+
+  .simple-card-page .simple-filter-panel .tag-grid {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 4px 2px 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .simple-card-page .simple-filter-panel .tag-button {
+    flex: 0 0 auto;
+    min-height: 42px;
+  }
+
+  .simple-card-page .simple-card-list {
+    max-height: min(36vh, 280px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .simple-card-page .simple-list-card {
+    min-height: 56px;
+  }
+
+  .simple-card-page .simple-stats-panel {
+    order: 3;
+  }
+
+  .simple-card-page .simple-stats-panel .stats-section {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .simple-card-page .simple-stats-panel .stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .simple-card-page .simple-stats-panel .stat-item {
+    min-width: 0;
+    padding: 10px 4px;
+  }
+
+  .simple-card-page .simple-stats-panel .stat-item strong {
+    font-size: clamp(18px, 5vw, 24px);
+  }
+
+  .simple-card-page .simple-stats-panel .stat-item span {
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+
+  .simple-card-page .simple-stats-panel .study-tip {
+    margin: 10px 0 0;
+  }
+
+  .simple-local-warning {
+    position: relative;
+    top: auto;
+    gap: 8px;
+    width: calc(100% - 24px);
+    margin: 8px auto 4px;
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .simple-local-warning strong {
+    white-space: normal;
+  }
+
+  .simple-local-warning span {
+    flex: 1 1 100%;
+    line-height: 1.5;
+  }
+
+  .simple-local-warning a {
+    margin-left: 0;
+  }
+
+  .simple-warning-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+  }
+}
+
+/* 八股卡片：用更少的表单字段，换取更快的知识沉淀。 */
