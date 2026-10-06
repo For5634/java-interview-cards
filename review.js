@@ -6,12 +6,12 @@
   const LEGACY_KEY = "java-interview-flashcards:v1";
   const PROFICIENCY = ["生疏", "一般", "熟练"];
   const DEFAULT_CATEGORIES = ["Agent", "MySQL", "计算机网络", "Spring Boot", "JVM", "Redis", "操作系统"];
-  const els = Object.fromEntries(["searchInput", "categoryFilters", "cardCount", "cardList", "flashcard", "flipButton", "cardCategory", "cardProficiency", "cardQuestion", "cardFlipTip", "cardCategoryBack", "cardProficiencyBack", "cardAnswerLabel", "cardAnswer", "showDetailedButton", "weakButton", "normalButton", "masteredButton", "totalCount", "weakCount", "normalCount", "masteredCount", "studyTip", "toast", "localStorageNotice"].map((id) => [id, document.getElementById(id)]));
+  const els = Object.fromEntries(["searchInput", "categoryFilters", "starredFilterButton", "cardCount", "cardList", "flashcard", "flipButton", "cardCategory", "cardProficiency", "cardQuestion", "cardFlipTip", "cardCategoryBack", "cardProficiencyBack", "cardAnswerLabel", "cardAnswer", "showDetailedButton", "starToggleButton", "starToggleButtonBack", "weakButton", "normalButton", "masteredButton", "totalCount", "weakCount", "normalCount", "masteredCount", "studyTip", "toast", "localStorageNotice", "exportProgressButton", "importProgressButton", "progressFileInput"].map((id) => [id, document.getElementById(id)]));
   let recoveredLegacyCards = 0;
   let refreshedLegacyCards = 0;
   let serverStorageLoaded = false;
   let serverSavePending = false;
-  const state = { cards: loadCards(), query: "", category: "全部", activeId: null, revealStage: 0, preferredCategory: DEFAULT_CATEGORIES[0] };
+  const state = { cards: loadCards(), query: "", category: "全部", starredOnly: false, activeId: null, revealStage: 0, preferredCategory: DEFAULT_CATEGORIES[0] };
 
   function readJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } }
   function saveCards() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards)); scheduleServerSave(); }
@@ -140,26 +140,39 @@
   function normalizeCard(card) {
     const legacyAnswer = String(card.answer || "").trim();
     const detailedAnswer = String(card.detailedAnswer || legacyAnswer).trim();
-    return { id: card.id || createId(), category: String(card.category || "未分类").trim(), proficiency: PROFICIENCY.includes(card.proficiency) ? card.proficiency : "生疏", question: String(card.question || "").trim(), briefAnswer: String(card.briefAnswer || conciseAnswer(legacyAnswer || detailedAnswer)).trim(), detailedAnswer };
+    return { id: card.id || createId(), category: String(card.category || "未分类").trim(), proficiency: PROFICIENCY.includes(card.proficiency) ? card.proficiency : "生疏", starred: Boolean(card.starred), question: String(card.question || "").trim(), briefAnswer: String(card.briefAnswer || conciseAnswer(legacyAnswer || detailedAnswer)).trim(), detailedAnswer };
   }
   function categories() { return [...new Set([...DEFAULT_CATEGORIES, ...state.cards.map((card) => card.category).filter(Boolean)])]; }
   function filteredCards() {
     const query = state.query.trim().toLowerCase();
-    return state.cards.filter((card) => (state.category === "全部" || card.category === state.category) && (!query || [card.category, card.question, card.briefAnswer, card.detailedAnswer, card.proficiency].join(" ").toLowerCase().includes(query))).sort((a, b) => proficiencyIndex(a.proficiency) - proficiencyIndex(b.proficiency));
+    return state.cards.filter((card) => (!state.starredOnly || card.starred) && (state.category === "全部" || card.category === state.category) && (!query || [card.category, card.question, card.briefAnswer, card.detailedAnswer, card.proficiency].join(" ").toLowerCase().includes(query))).sort((a, b) => proficiencyIndex(a.proficiency) - proficiencyIndex(b.proficiency));
   }
   function activeCard() { return state.cards.find((card) => card.id === state.activeId); }
   function hasDetailedAnswer(card) { return Boolean(card?.detailedAnswer?.trim()); }
   function chooseActive() { const cards = filteredCards(); if (!cards.some((card) => card.id === state.activeId)) state.activeId = cards[0]?.id || null; }
 
-  function render() { chooseActive(); renderCategories(); renderCard(); renderList(); renderStats(); }
+  function render() { chooseActive(); renderCategories(); renderStarredFilter(); renderCard(); renderList(); renderStats(); }
   function renderCategories() {
     const values = ["全部", ...categories().filter((category) => state.cards.some((card) => card.category === category))];
-    els.categoryFilters.innerHTML = values.map((category) => `<button class="tag-button ${state.category === category ? "active" : ""}" data-category="${escapeHtml(category)}" type="button">${escapeHtml(category)}</button>`).join("");
+    els.categoryFilters.innerHTML = values.map((category) => `<button class="tag-button ${state.category === category ? "active" : ""}" data-category="${escapeHtml(category)}" type="button" aria-pressed="${state.category === category}">${escapeHtml(category)}</button>`).join("");
     els.categoryFilters.querySelectorAll("button").forEach((button) => button.onclick = () => { state.category = button.dataset.category; state.revealStage = 0; render(); });
+  }
+  function renderStarredFilter() {
+    const count = state.cards.filter((card) => card.starred).length;
+    els.starredFilterButton.textContent = `★ 重点集 (${count})`;
+    els.starredFilterButton.classList.toggle("active", state.starredOnly);
+    els.starredFilterButton.setAttribute("aria-pressed", String(state.starredOnly));
   }
   function renderCard() {
     const card = activeCard(); const hasCard = Boolean(card);
     els.flashcard.classList.toggle("flipped", state.revealStage > 0); els.flashcard.dataset.proficiency = card?.proficiency || "生疏"; els.flashcard.dataset.revealStage = state.revealStage; els.flipButton.disabled = !hasCard;
+    [els.starToggleButton, els.starToggleButtonBack].forEach((button) => {
+      button.disabled = !hasCard;
+      button.classList.toggle("is-starred", Boolean(card?.starred));
+      button.setAttribute("aria-pressed", String(Boolean(card?.starred)));
+      button.setAttribute("aria-label", card?.starred ? "从重点集中移除" : "加入重点集");
+      button.querySelector("span").textContent = card?.starred ? "★" : "☆";
+    });
     [els.weakButton, els.normalButton, els.masteredButton].forEach((button) => button.disabled = !hasCard);
     if (!card) { els.cardCategory.textContent = "未分类"; els.cardProficiency.textContent = "生疏"; els.cardCategoryBack.textContent = "未分类"; els.cardProficiencyBack.textContent = "生疏"; els.cardAnswerLabel.textContent = "精简答案"; els.cardFlipTip.textContent = "加载中或没有符合条件的卡片。"; els.cardQuestion.textContent = "等待数据加载…"; els.cardAnswer.textContent = "答案会显示在这里。"; els.showDetailedButton.classList.add("hidden"); els.showDetailedButton.disabled = true; return; }
     els.cardCategory.textContent = card.category; els.cardCategoryBack.textContent = card.category; els.cardProficiency.textContent = card.proficiency; els.cardProficiencyBack.textContent = card.proficiency; els.cardQuestion.textContent = card.question;
@@ -172,8 +185,8 @@
     els.cardFlipTip.textContent = state.revealStage === 2 ? `${positionText} · 可在卡片内滚动阅读；点击右上角"查看题面"返回。` : state.revealStage === 1 && hasDetailed ? `${positionText} · 精简答案会保持在此页；需要补充时点击下方"查看详细答案"。` : state.revealStage === 1 ? `${positionText} · 精简答案已是最终页；点击右上角"查看题面"返回。` : `${positionText} · 点击卡片查看精简答案。`;
   }
   function renderList() {
-    const cards = filteredCards(); els.cardCount.textContent = `${cards.length} 张卡片 · 生疏优先`;
-    els.cardList.innerHTML = cards.map((card) => `<button class="simple-list-card ${card.id === state.activeId ? "active" : ""}" data-proficiency="${escapeHtml(card.proficiency)}" data-id="${escapeHtml(card.id)}" type="button"><span>${escapeHtml(card.category)}</span><strong>${escapeHtml(card.question)}</strong><small>${escapeHtml(card.proficiency)}</small></button>`).join("") || '<p class="note">没有符合条件的卡片。</p>';
+    const cards = filteredCards(); els.cardCount.textContent = `${cards.length} 张卡片 · ${state.starredOnly ? "重点集 · " : ""}生疏优先`;
+    els.cardList.innerHTML = cards.map((card) => `<button class="simple-list-card ${card.id === state.activeId ? "active" : ""}" data-proficiency="${escapeHtml(card.proficiency)}" data-starred="${card.starred}" data-id="${escapeHtml(card.id)}" type="button"><span>${escapeHtml(card.category)}</span><strong>${escapeHtml(card.question)}</strong><small>${escapeHtml(card.proficiency)}</small></button>`).join("") || `<p class="note">${state.starredOnly ? "重点集还是空的，点卡片右上角☆标记重点。" : "没有符合条件的卡片。"}</p>`;
     els.cardList.querySelectorAll("button").forEach((button) => button.onclick = () => { state.activeId = button.dataset.id; state.revealStage = 0; render(); });
   }
   function renderStats() {
@@ -215,10 +228,71 @@
   }
   function moveCard(direction) { const cards = filteredCards(); if (!cards.length) return; const index = Math.max(0, cards.findIndex((card) => card.id === state.activeId)); state.activeId = cards[(index + direction + cards.length) % cards.length].id; state.revealStage = 0; render(); }
 
+  function toggleStar() {
+    const card = activeCard(); if (!card) return;
+    card.starred = !card.starred; saveCards(); render();
+    showToast(card.starred ? "已加入重点集" : "已从重点集移除");
+  }
+  function exportProgress() {
+    const backup = {
+      format: "java-interview-flashcards-progress",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      cards: state.cards.map((card) => ({ id: card.id, category: card.category, question: card.question, proficiency: card.proficiency, starred: Boolean(card.starred) }))
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `八股卡片进度-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("进度备份已导出");
+  }
+  async function importProgress(file) {
+    if (!file) return;
+    try {
+      const backup = JSON.parse(await file.text());
+      if (backup?.format !== "java-interview-flashcards-progress" || backup.version !== 1 || !Array.isArray(backup.cards)) {
+        throw new Error("备份格式不受支持。");
+      }
+      let restored = 0;
+      let skipped = 0;
+      const byId = new Map(state.cards.map((card) => [card.id, card]));
+      for (const entry of backup.cards) {
+        if (!entry || typeof entry.category !== "string" || typeof entry.question !== "string" || !PROFICIENCY.includes(entry.proficiency) || typeof entry.starred !== "boolean") {
+          skipped++;
+          continue;
+        }
+        const key = cardKey({ category: entry.category.trim(), question: entry.question.trim() });
+        const card = (typeof entry.id === "string" ? byId.get(entry.id) : null) || state.cards.find((item) => cardKey(item) === key);
+        if (!card) { skipped++; continue; }
+        card.proficiency = entry.proficiency;
+        card.starred = entry.starred;
+        restored++;
+      }
+      if (restored) {
+        saveCards();
+        render();
+      }
+      showToast(restored ? `已恢复 ${restored} 张卡片的进度${skipped ? `，跳过 ${skipped} 张` : ""}` : "没有匹配到可恢复的卡片");
+    } catch (error) {
+      showToast(error.message || "无法读取这个进度备份");
+    } finally {
+      els.progressFileInput.value = "";
+    }
+  }
+
   document.getElementById("dismissStorageNotice").onclick = () => {
     els.localStorageNotice.classList.add("hidden");
     try { sessionStorage.setItem("java-interview-local-notice-dismissed", "1"); } catch {}
   };
+  els.starredFilterButton.onclick = () => { state.starredOnly = !state.starredOnly; state.revealStage = 0; render(); };
+  els.starToggleButton.onclick = (event) => { event.stopPropagation(); toggleStar(); };
+  els.starToggleButtonBack.onclick = (event) => { event.stopPropagation(); toggleStar(); };
+  els.exportProgressButton.onclick = exportProgress;
+  els.importProgressButton.onclick = () => els.progressFileInput.click();
+  els.progressFileInput.onchange = () => importProgress(els.progressFileInput.files[0]);
   const mobileLayout = window.matchMedia("(max-width: 720px)");
   syncResponsiveDisclosures();
   if (mobileLayout.addEventListener) mobileLayout.addEventListener("change", syncResponsiveDisclosures);

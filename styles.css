@@ -2350,3 +2350,106 @@ button:disabled {
 }
 
 /* 八股卡片：用更少的表单字段，换取更快的知识沉淀。 */
+
+.simple-card-meta {
+  gap: 8px;
+}
+
+.simple-card-meta span:nth-child(2) {
+  border-color: #a7c5b1;
+  background: #e9f2eb;
+  color: #336847;
+}
+
+.star-toggle {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  min-height: 40px;
+  place-items: center;
+  border: 1px solid #d7c58d;
+  border-radius: 11px;
+  background: #fffaf0;
+  color: #92700e;
+  cursor: pointer;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.star-toggle:hover:not(:disabled),
+.star-toggle.is-starred {
+  border-color: #c29921;
+  background: #fff1b8;
+  color: #8b6700;
+}
+
+.star-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.starred-filter {
+  width: 100%;
+  justify-content: flex-start;
+  margin: 8px 0 10px;
+  border-color: #d7c58d;
+  background: #fffaf0;
+  color: #80620b;
+}
+
+.starred-filter.active {
+  border-color: #c29921;
+  background: #fff1b8;
+  color: #704f00;
+}
+
+.simple-list-card[data-starred="true"] strong::before {
+  content: "★ ";
+  color: #a17a0b;
+}
+
+.progress-backup-section .note {
+  margin: 8px 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.progress-backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.progress-backup-actions button {
+  min-height: 42px;
+}
+
+@media (max-width: 720px) {
+  .simple-card-page .simple-card-meta span:first-child {
+    max-width: 45%;
+  }
+
+  .simple-card-page .simple-card-meta span:nth-child(2) {
+    max-width: 28%;
+  }
+
+  .simple-card-page .star-toggle {
+    flex-basis: 42px;
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  .simple-card-page .starred-filter {
+    min-height: 44px;
+  }
+
+  .simple-card-page .progress-backup-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .simple-card-page .progress-backup-actions button {
+    min-height: 46px;
+  }
+}
