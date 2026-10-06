@@ -11,3 +11,5 @@ Learning progress is stored in the current browser. Use **Export backup** and **
 ## GitHub Pages
 
 This repository is published from the `main` branch root with GitHub Pages. The site consists of static HTML, CSS, JavaScript, and JSON files.
+
+The local source project keeps the review layout in `review.html`, `review.css`, and `review.js`. Run `npm run sync:review` there to update this deployment folder and merge the local card content into the published library. Newer source files take precedence for matching cards; personal proficiency and stars are excluded from the shared library. A content version lets returning visitors receive updated answers while retaining their own proficiency and stars.

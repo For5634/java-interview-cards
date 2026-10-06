@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "java-interview-flashcards:simple:v1";
-  const INITIAL_CARDS_KEY = "java-interview-flashcards:initial-cards-loaded:v1";
+  const INITIAL_CARDS_KEY = "java-interview-flashcards:content-version:v1";
   const LEGACY_KEY = "java-interview-flashcards:v1";
   const PROFICIENCY = ["生疏", "一般", "熟练"];
   const DEFAULT_CATEGORIES = ["Agent", "MySQL", "计算机网络", "Spring Boot", "JVM", "Redis", "操作系统"];
@@ -11,17 +11,29 @@
   let refreshedLegacyCards = 0;
   let serverStorageLoaded = false;
   let serverSavePending = false;
-  const state = { cards: loadCards(), query: "", category: "全部", starredOnly: false, activeId: null, revealStage: 0, preferredCategory: DEFAULT_CATEGORIES[0] };
+  const state = { cards: loadCards(), query: "", category: "全部", starredOnly: false, activeId: null, revealStage: 0, loading: true };
+  ["allCardsButton", "previousCardButton", "nextCardButton", "cardQuestionBack", "cardPosition", "collectionTitle"].forEach((id) => { els[id] = document.getElementById(id); });
 
   function readJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } }
   function saveCards() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards)); scheduleServerSave(); }
   function createId() { return `card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`; }
   function escapeHtml(value) { return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
   function formatText(value) {
-    return escapeHtml(value)
+    const formatted = escapeHtml(value)
       .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
-      .replace(/`([^`\n]+)`/g, "<code>$1</code>")
-      .replaceAll("\n", "<br>");
+      .replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    const blocks = [];
+    let paragraph = [];
+    let bullets = [];
+    const flushParagraph = () => { if (paragraph.length) { blocks.push(`<p>${paragraph.join("<br>")}</p>`); paragraph = []; } };
+    const flushBullets = () => { if (bullets.length) { blocks.push(`<ul>${bullets.map((item) => `<li>${item}</li>`).join("")}</ul>`); bullets = []; } };
+    for (const line of formatted.split("\n")) {
+      if (!line.trim()) { flushParagraph(); flushBullets(); }
+      else if (/^\s*[-*]\s+/.test(line)) { flushParagraph(); bullets.push(line.replace(/^\s*[-*]\s+/, "")); }
+      else { flushBullets(); paragraph.push(line); }
+    }
+    flushParagraph(); flushBullets();
+    return blocks.join("");
   }
   function conciseAnswer(answer) {
     const firstParagraph = String(answer || "").trim().split(/\n\s*\n/)[0].trim();
@@ -49,7 +61,7 @@
       const index = merged.findIndex((card) => card.id === incoming.id || cardKey(card) === cardKey(incoming));
       if (index < 0) { merged.push(incoming); return; }
       const current = merged[index];
-      merged[index] = { ...incoming, ...current, briefAnswer: current.briefAnswer || incoming.briefAnswer, detailedAnswer: current.detailedAnswer.length >= incoming.detailedAnswer.length ? current.detailedAnswer : incoming.detailedAnswer };
+      merged[index] = { ...current, ...incoming, id: current.id, proficiency: current.proficiency, starred: current.starred };
     });
     return merged;
   }
@@ -89,17 +101,18 @@
     }
   }
   async function loadInitialCards() {
-    if (isLocalCardServer() || localStorage.getItem(INITIAL_CARDS_KEY)) return;
+    if (location.protocol === "file:") return;
     try {
       const response = await fetch("initial-cards.json", { cache: "no-store" });
       if (!response.ok) throw new Error("读取初始卡片失败");
       const payload = await response.json();
       const initialCards = Array.isArray(payload.cards) ? payload.cards : [];
+      const revision = String(payload.contentVersion || payload.savedAt || "initial");
+      if (localStorage.getItem(INITIAL_CARDS_KEY) === revision && state.cards.length) return;
       state.cards = mergeCardCollections(state.cards, initialCards);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards));
-      localStorage.setItem(INITIAL_CARDS_KEY, "1");
+      localStorage.setItem(INITIAL_CARDS_KEY, revision);
       render();
-      if (initialCards.length) showToast(`已加载 ${initialCards.length} 张初始卡片`);
     } catch (error) {
       console.warn("初始卡片加载失败：", error);
     }
@@ -118,8 +131,8 @@
       if (legacyCard.briefAnswer !== existing.briefAnswer || legacyCard.detailedAnswer.length > existing.detailedAnswer.length) refreshedLegacyCards++;
       merged[existingIndex] = {
         ...existing,
-        briefAnswer: legacyCard.briefAnswer || existing.briefAnswer,
-        detailedAnswer: legacyCard.detailedAnswer.length > existing.detailedAnswer.length ? legacyCard.detailedAnswer : existing.detailedAnswer,
+        briefAnswer: existing.briefAnswer || legacyCard.briefAnswer,
+        detailedAnswer: existing.detailedAnswer || legacyCard.detailedAnswer,
         proficiency: existing.proficiency || legacyCard.proficiency
       };
     });
@@ -162,9 +175,17 @@
     els.starredFilterButton.textContent = `★ 重点集 (${count})`;
     els.starredFilterButton.classList.toggle("active", state.starredOnly);
     els.starredFilterButton.setAttribute("aria-pressed", String(state.starredOnly));
+    els.allCardsButton.classList.toggle("active", !state.starredOnly);
+    els.allCardsButton.setAttribute("aria-pressed", String(!state.starredOnly));
   }
   function renderCard() {
     const card = activeCard(); const hasCard = Boolean(card);
+    const visibleCards = filteredCards();
+    const position = visibleCards.findIndex((item) => item.id === card?.id) + 1;
+    els.collectionTitle.textContent = state.starredOnly ? `重点集${state.category !== "全部" ? ` / ${state.category}` : ""}` : state.category === "全部" ? "全部卡片" : state.category;
+    els.cardPosition.textContent = hasCard ? `第 ${position} / ${visibleCards.length} 张` : "暂无符合条件的卡片";
+    els.previousCardButton.disabled = !hasCard;
+    els.nextCardButton.disabled = !hasCard;
     els.flashcard.classList.toggle("flipped", state.revealStage > 0); els.flashcard.dataset.proficiency = card?.proficiency || "生疏"; els.flashcard.dataset.revealStage = state.revealStage; els.flipButton.disabled = !hasCard;
     [els.starToggleButton, els.starToggleButtonBack].forEach((button) => {
       button.disabled = !hasCard;
@@ -174,18 +195,26 @@
       button.querySelector("span").textContent = card?.starred ? "★" : "☆";
     });
     [els.weakButton, els.normalButton, els.masteredButton].forEach((button) => button.disabled = !hasCard);
-    if (!card) { els.cardCategory.textContent = "未分类"; els.cardProficiency.textContent = "生疏"; els.cardCategoryBack.textContent = "未分类"; els.cardProficiencyBack.textContent = "生疏"; els.cardAnswerLabel.textContent = "精简答案"; els.cardFlipTip.textContent = "加载中或没有符合条件的卡片。"; els.cardQuestion.textContent = "等待数据加载…"; els.cardAnswer.textContent = "答案会显示在这里。"; els.showDetailedButton.classList.add("hidden"); els.showDetailedButton.disabled = true; return; }
+    if (!card) {
+      els.cardCategory.textContent = "未分类"; els.cardProficiency.textContent = "生疏";
+      els.cardCategoryBack.textContent = "未分类"; els.cardProficiencyBack.textContent = "生疏";
+      els.cardAnswerLabel.textContent = "精简答案";
+      els.cardQuestion.textContent = state.loading ? "加载卡片中……" : state.starredOnly ? "这里还没有符合条件的重点卡片" : "没有找到匹配的卡片";
+      els.cardQuestionBack.textContent = els.cardQuestion.textContent;
+      els.cardFlipTip.textContent = state.loading ? "稍等片刻，正在整理题目。" : state.starredOnly ? "回到全部卡片，点 ☆ 标记重点；也可以调整分类或搜索。" : "试试其他关键词，或切换到全部分类。";
+      els.cardAnswer.textContent = els.cardFlipTip.textContent;
+      els.showDetailedButton.classList.add("hidden"); els.showDetailedButton.disabled = true; return;
+    }
     els.cardCategory.textContent = card.category; els.cardCategoryBack.textContent = card.category; els.cardProficiency.textContent = card.proficiency; els.cardProficiencyBack.textContent = card.proficiency; els.cardQuestion.textContent = card.question;
+    els.cardQuestionBack.textContent = card.question;
     const hasDetailed = hasDetailedAnswer(card);
     els.cardAnswerLabel.textContent = state.revealStage === 2 && hasDetailed ? "详细答案" : "精简答案"; els.cardAnswer.innerHTML = formatText(state.revealStage === 2 && hasDetailed ? card.detailedAnswer : card.briefAnswer);
     els.showDetailedButton.classList.toggle("hidden", !(state.revealStage === 1 && hasDetailed)); els.showDetailedButton.disabled = !hasDetailed;
     els.flipButton.textContent = state.revealStage === 0 ? "查看精简答案" : "查看题面";
-    const visibleCards = filteredCards(); const position = visibleCards.findIndex((item) => item.id === card.id) + 1;
-    const positionText = `第 ${position} / ${visibleCards.length} 张`;
-    els.cardFlipTip.textContent = state.revealStage === 2 ? `${positionText} · 可在卡片内滚动阅读；点击右上角"查看题面"返回。` : state.revealStage === 1 && hasDetailed ? `${positionText} · 精简答案会保持在此页；需要补充时点击下方"查看详细答案"。` : state.revealStage === 1 ? `${positionText} · 精简答案已是最终页；点击右上角"查看题面"返回。` : `${positionText} · 点击卡片查看精简答案。`;
+    els.cardFlipTip.textContent = "点击卡片或下方按钮查看答案";
   }
   function renderList() {
-    const cards = filteredCards(); els.cardCount.textContent = `${cards.length} 张卡片 · ${state.starredOnly ? "重点集 · " : ""}生疏优先`;
+    const cards = filteredCards(); els.cardCount.textContent = `${cards.length} 张题目`;
     els.cardList.innerHTML = cards.map((card) => `<button class="simple-list-card ${card.id === state.activeId ? "active" : ""}" data-proficiency="${escapeHtml(card.proficiency)}" data-starred="${card.starred}" data-id="${escapeHtml(card.id)}" type="button"><span>${escapeHtml(card.category)}</span><strong>${escapeHtml(card.question)}</strong><small>${escapeHtml(card.proficiency)}</small></button>`).join("") || `<p class="note">${state.starredOnly ? "重点集还是空的，点卡片右上角☆标记重点。" : "没有符合条件的卡片。"}</p>`;
     els.cardList.querySelectorAll("button").forEach((button) => button.onclick = () => { state.activeId = button.dataset.id; state.revealStage = 0; render(); });
   }
@@ -287,7 +316,10 @@
     els.localStorageNotice.classList.add("hidden");
     try { sessionStorage.setItem("java-interview-local-notice-dismissed", "1"); } catch {}
   };
-  els.starredFilterButton.onclick = () => { state.starredOnly = !state.starredOnly; state.revealStage = 0; render(); };
+  els.allCardsButton.onclick = () => { state.starredOnly = false; state.category = "全部"; state.revealStage = 0; render(); };
+  els.starredFilterButton.onclick = () => { state.starredOnly = true; state.category = "全部"; state.revealStage = 0; render(); };
+  els.previousCardButton.onclick = () => moveCard(-1);
+  els.nextCardButton.onclick = () => moveCard(1);
   els.starToggleButton.onclick = (event) => { event.stopPropagation(); toggleStar(); };
   els.starToggleButtonBack.onclick = (event) => { event.stopPropagation(); toggleStar(); };
   els.exportProgressButton.onclick = exportProgress;
@@ -299,13 +331,21 @@
   else mobileLayout.addListener(syncResponsiveDisclosures);
 
   els.searchInput.oninput = () => { state.query = els.searchInput.value.trim(); render(); };
-  els.flipButton.onclick = flip; els.flashcard.onclick = flip; els.flashcard.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") flip(); }; els.showDetailedButton.onclick = showDetailedAnswer;
+  els.flipButton.onclick = flip;
+  els.flashcard.onclick = (event) => { if (state.revealStage === 0 && !event.target.closest("button") && !window.getSelection()?.toString()) flip(); };
+  els.flashcard.onkeydown = (event) => { if (event.target === els.flashcard && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); flip(); } };
+  els.showDetailedButton.onclick = (event) => { event.stopPropagation(); showDetailedAnswer(); };
   els.weakButton.onclick = () => updateProficiency("生疏"); els.normalButton.onclick = () => updateProficiency("一般"); els.masteredButton.onclick = () => updateProficiency("熟练");
   document.onkeydown = (e) => { if (e.target.matches("input, textarea")) return; if (e.key === "f" || e.key === "F") { e.preventDefault(); flip(); } else if (e.key === "1") { e.preventDefault(); updateProficiency("生疏"); } else if (e.key === "2") { e.preventDefault(); updateProficiency("一般"); } else if (e.key === "3") { e.preventDefault(); updateProficiency("熟练"); } else if (e.key === "ArrowLeft") { e.preventDefault(); moveCard(-1); } else if (e.key === "ArrowRight") { e.preventDefault(); moveCard(1); } };
 
   renderStorageNotice();
   render();
   if (recoveredLegacyCards || refreshedLegacyCards) showToast(`已恢复 ${recoveredLegacyCards || refreshedLegacyCards} 张旧版八股卡片`);
-  loadCardsFromDisk();
-  loadInitialCards();
+  (async () => {
+    if (isLocalCardServer()) await loadCardsFromDisk();
+    await loadInitialCards();
+    if (isLocalCardServer()) scheduleServerSave();
+    state.loading = false;
+    render();
+  })();
 })();
