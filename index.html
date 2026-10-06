@@ -3,33 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#315be8">
+  <meta name="theme-color" content="#173f35">
   <title>八股卡片 · 面试复习</title>
-  <link rel="stylesheet" href="styles.css?v=92eeea3e3a18">
+  <link rel="stylesheet" href="styles.css?v=a14e16322f49">
 </head>
 <body class="review-page">
   <aside class="local-notice hidden" id="localStorageNotice" aria-live="polite"><span>本地文件可能无法加载卡片数据。<a href="https://for5634.github.io/java-interview-cards/">打开在线版</a></span><button id="dismissStorageNotice" type="button" aria-label="关闭提示">×</button></aside>
   <div class="review-shell">
     <header class="page-header">
-      <div class="brand"><span class="brand-symbol" aria-hidden="true">卡</span><div><h1>八股卡片</h1><p>把知识练到能说清</p></div></div>
-      <span class="header-note">你的进度，保存在此浏览器</span>
+      <div class="brand"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="5" y="5" width="19" height="23" rx="3" transform="rotate(-9 5 5)"/><rect x="10" y="3" width="19" height="23" rx="3"/><path d="M15 10h9M15 15h6"/></svg></span><div><h1>八股卡片<span class="brand-caption">INTERVIEW NOTES</span></h1><p>把知识练到能说清</p></div></div>
+      <span class="header-note"><span class="status-dot" aria-hidden="true"></span>进度自动保存在此浏览器</span>
     </header>
     <main class="review-workspace">
       <aside class="library-panel" aria-label="卡片目录">
-        <label class="search-field" for="searchInput"><span class="search-icon" aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="搜索题目或答案" autocomplete="off"><span class="sr-only">搜索卡片</span></label>
+        <div class="library-title"><h2>我的卡册</h2><span>筛选 · 收藏 · 复习</span></div>
+        <label class="search-field" for="searchInput"><svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="searchInput" type="search" placeholder="搜索题目或答案" autocomplete="off"><span class="sr-only">搜索卡片</span></label>
         <div class="collection-switch" aria-label="选择卡片集"><button class="collection-button active" id="allCardsButton" type="button" aria-pressed="true">全部卡片</button><button class="collection-button" id="starredFilterButton" type="button" aria-pressed="false">★ 重点集 (0)</button></div>
         <details class="library-details" id="filterDetails" open>
           <summary>分类与题目目录</summary>
-          <div class="library-content"><div class="library-heading">按知识分类</div><div class="category-grid" id="categoryFilters"></div><div class="list-heading"><span id="cardCount">加载卡片中</span><span>生疏优先</span></div><div class="card-list" id="cardList" aria-label="卡片列表"></div></div>
+          <div class="library-content"><div class="library-heading">知识分类</div><div class="category-grid" id="categoryFilters"></div><div class="list-heading"><span id="cardCount">加载卡片中</span><span>生疏优先</span></div><div class="card-list" id="cardList" aria-label="卡片列表"></div></div>
         </details>
       </aside>
       <div class="main-column">
       <section class="study-zone" aria-label="复习卡片">
-        <div class="study-toolbar"><div><h2 id="collectionTitle">全部卡片</h2><span id="cardPosition">准备开始复习</span></div><div class="navigation-actions"><button id="previousCardButton" type="button" aria-label="上一张卡片">‹</button><button id="nextCardButton" type="button" aria-label="下一张卡片">›</button></div></div>
+        <div class="study-toolbar"><div><p class="workspace-label">面试复习</p><h2 id="collectionTitle">全部卡片</h2></div><div class="navigation-actions"><span id="cardPosition">准备开始复习</span><button id="previousCardButton" type="button" aria-label="上一张卡片"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button><button id="nextCardButton" type="button" aria-label="下一张卡片"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button></div></div>
+        <div class="study-card">
         <article class="flashcard" id="flashcard" tabindex="0" aria-label="点击卡片翻面" aria-live="polite">
           <div class="card-front card-face">
             <div class="card-meta"><div class="card-badges"><span id="cardCategory">未分类</span><span class="proficiency-badge" id="cardProficiency">生疏</span></div><button class="star-toggle" id="starToggleButton" type="button" aria-label="加入重点集" aria-pressed="false"><span aria-hidden="true">☆</span></button></div>
-            <p class="side-label">先想一想，再看答案</p><h2 class="question" id="cardQuestion">加载卡片中……</h2><p class="flip-tip" id="cardFlipTip">点击卡片或下方按钮查看答案</p>
+            <div class="question-body"><p class="side-label"><span class="question-mark" aria-hidden="true">Q.</span>先想一想，再看答案</p><h2 class="question" id="cardQuestion">加载卡片中……</h2></div><p class="flip-tip" id="cardFlipTip">点击卡片或下方按钮查看答案</p>
           </div>
           <div class="card-back card-face">
             <div class="card-meta"><div class="card-badges"><span id="cardCategoryBack">未分类</span><span class="proficiency-badge" id="cardProficiencyBack">生疏</span></div><button class="star-toggle" id="starToggleButtonBack" type="button" aria-label="加入重点集" aria-pressed="false"><span aria-hidden="true">☆</span></button></div>
@@ -37,17 +39,18 @@
           </div>
         </article>
         <div class="review-controls"><button class="flip-button" id="flipButton" type="button">查看答案</button><div class="rating-actions" aria-label="更新记忆熟练度"><button class="rating-weak" id="weakButton" type="button"><span>生疏</span><small>还需复习</small></button><button class="rating-normal" id="normalButton" type="button"><span>一般</span><small>再巩固一下</small></button><button class="rating-mastered" id="masteredButton" type="button"><span>熟练</span><small>能清楚回答</small></button></div></div>
-        <p class="review-note">标记熟练度后自动进入下一张；点 ☆ 收入重点集。</p>
+        </div>
+        <p class="review-note"><span>点 ☆ 收入重点集</span><span>标记熟练度，自动进入下一张</span></p>
       </section>
       <aside class="progress-panel" aria-label="学习进度与备份">
-        <div class="progress-heading"><h2>当前复习进度</h2><p id="studyTip">开始复习吧</p></div>
-        <div class="stats-grid"><div><strong id="totalCount">0</strong><span>卡片</span></div><div class="stat-weak"><strong id="weakCount">0</strong><span>生疏</span></div><div class="stat-normal"><strong id="normalCount">0</strong><span>一般</span></div><div class="stat-mastered"><strong id="masteredCount">0</strong><span>熟练</span></div></div>
+        <div class="progress-overview"><div class="progress-heading"><div class="progress-title"><h2>这组卡片的学习进度</h2><span><strong id="masteryPercentage">0%</strong> 已熟练</span></div><div class="mastery-meter" id="masteryMeter" role="progressbar" aria-label="当前卡片集的熟练掌握比例" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="masteryFill"></span></div><p id="studyTip">开始复习吧</p></div>
+        <div class="stats-grid"><div><strong id="totalCount">0</strong><span>卡片总数</span></div><div class="stat-weak"><strong id="weakCount">0</strong><span>生疏</span></div><div class="stat-normal"><strong id="normalCount">0</strong><span>一般</span></div><div class="stat-mastered"><strong id="masteredCount">0</strong><span>熟练</span></div></div></div>
         <details class="utility-details" id="statsDetails" open><summary>备份进度与快捷键</summary><div class="utility-content"><div class="backup-tools"><p>换设备时，导出并导入备份即可恢复熟练度与星标。</p><div class="backup-actions"><button id="exportProgressButton" type="button">导出备份</button><button id="importProgressButton" type="button">导入备份</button><input class="hidden" id="progressFileInput" type="file" accept="application/json,.json" aria-label="选择进度备份文件"></div></div><p class="keyboard-help"><span><kbd>F</kbd> 翻面</span><span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> 标记熟练度</span><span><kbd>←</kbd> <kbd>→</kbd> 切换卡片</span></p></div></details>
       </aside>
       </div>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="review.js?v=92eeea3e3a18"></script>
+  <script src="review.js?v=a14e16322f49"></script>
 </body>
 </html>

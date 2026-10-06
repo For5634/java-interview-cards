@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "contentVersion": "42a3377bcf31be57",
+  "contentVersion": "449a06debeb142d5",
   "cards": [
     {
       "id": "card-1791041187688-3l7zv",
@@ -431,7 +431,7 @@
       "proficiency": "生疏",
       "starred": false,
       "question": "项目开发过程中遇到什么难点",
-      "briefAnswer": "第一个是多 Agent 的协作问题。一开始如果把 Understanding、Safety、Context、Response 这些 Agent 按固定顺序串起来，其实比较像普通工作流，而且后面增加 Agent 时耦合会越来越高。所以我后面采用了事件驱动的共享黑板模式，把任务、Agent 产生的中间结果和事件统一放在 Blackboard 上，每个 Agent 根据自己的 Capability 和 confidence 去 claim 任务，Coordinator 主要负责创建任务、控制执行预算以及最终结果收口。这样增加新的 Agent 时，对原有流程影响会比较小。\n\n第二个难点是心理场景对安全性的要求比较高。不能只让模型生成一次回复就直接返回，因为可能存在高风险信息漏检或者回复本身不合适的问题。所以我做了两层安全控制：首先 SafetyAgent 会对用户输入做风险评估；ResponseAgent 生成候选回复之后，还必须再次经过 SafetyAgent 审核。如果没有通过，就生成 critique，让 ResponseAgent 修改之后重新审核，形成 Critique、Revision、Review 的闭环，高风险情况下还会触发 Safety Override。\n\n第三个是RAG 的召回效果。最开始只使用向量检索时，我发现对于一些像“自杀计划”“失眠”“考试压力”这种关键词比较明显的问题，纯语义检索不一定稳定。所以后来改成 Chroma 向量召回和 BM25 关键词召回两路检索，通过 RRF 做结果融合，再进行 Rerank。为了不是凭感觉判断效果，我还针对自己的知识库构建了 60 条评测数据，通过 Recall@K、MRR、NDCG 和 HitRate 来评估检索质量。",
+      "briefAnswer": "第一个是多 Agent 的协作问题。一开始如果把 Understanding、Safety、Context、Response 这些 Agent 按固定顺序串起来，其实比较像普通工作流，而且后面增加 Agent 时耦合会越来越高。所以我后面采用了事件驱动的共享黑板模式，把任务、Agent 产生的中间结果和事件统一放在 Blackboard 上，每个 Agent 根据自己的 Capability 和 confidence 去 claim 任务，Coordinator 主要负责创建任务、控制执行预算以及最终结果收口。这样增加新的 Agent 时，对原有流程影响会比较小。\n第二个是RAG 的召回效果。最开始只使用向量检索时，我发现对于一些像“自杀计划”“失眠”“考试压力”这种关键词比较明显的问题，纯语义检索不一定稳定。所以后来改成 Chroma 向量召回和 BM25 关键词召回两路检索，通过 RRF 做结果融合，再进行 Rerank。为了不是凭感觉判断效果，我还针对自己的知识库构建了 60 条评测数据，通过 Recall@K、MRR、NDCG 和 HitRate 来评估检索质量。",
       "detailedAnswer": ""
     },
     {

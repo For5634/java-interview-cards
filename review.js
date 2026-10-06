@@ -12,7 +12,7 @@
   let serverStorageLoaded = false;
   let serverSavePending = false;
   const state = { cards: loadCards(), query: "", category: "全部", starredOnly: false, activeId: null, revealStage: 0, loading: true };
-  ["allCardsButton", "previousCardButton", "nextCardButton", "cardQuestionBack", "cardPosition", "collectionTitle"].forEach((id) => { els[id] = document.getElementById(id); });
+  ["allCardsButton", "previousCardButton", "nextCardButton", "cardQuestionBack", "cardPosition", "collectionTitle", "masteryPercentage", "masteryMeter", "masteryFill"].forEach((id) => { els[id] = document.getElementById(id); });
 
   function readJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } }
   function saveCards() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards)); scheduleServerSave(); }
@@ -55,6 +55,7 @@
     document.getElementById("statsDetails").open = !isMobile;
   }
   function cardKey(card) { return `${card.category}\u0000${card.question}`; }
+  function hasDamagedText(card) { return [card.category, card.question, card.briefAnswer, card.detailedAnswer].some((text) => String(text || "").includes("\uFFFD")); }
   function mergeCardCollections(primary, secondary) {
     const merged = primary.map(normalizeCard);
     secondary.map(normalizeCard).forEach((incoming) => {
@@ -62,6 +63,9 @@
       if (index < 0) { merged.push(incoming); return; }
       const current = merged[index];
       merged[index] = { ...current, ...incoming, id: current.id, proficiency: current.proficiency, starred: current.starred };
+      for (const field of ["category", "question", "briefAnswer", "detailedAnswer"]) {
+        if (String(incoming[field]).includes("\uFFFD") && !String(current[field]).includes("\uFFFD")) merged[index][field] = current[field];
+      }
     });
     return merged;
   }
@@ -108,7 +112,7 @@
       const payload = await response.json();
       const initialCards = Array.isArray(payload.cards) ? payload.cards : [];
       const revision = String(payload.contentVersion || payload.savedAt || "initial");
-      if (localStorage.getItem(INITIAL_CARDS_KEY) === revision && state.cards.length) return;
+      if (localStorage.getItem(INITIAL_CARDS_KEY) === revision && state.cards.length && !state.cards.some(hasDamagedText)) return;
       state.cards = mergeCardCollections(state.cards, initialCards);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards));
       localStorage.setItem(INITIAL_CARDS_KEY, revision);
@@ -242,6 +246,10 @@
     els.weakCount.textContent = weakCards.length;
     els.normalCount.textContent = normalCards.length;
     els.masteredCount.textContent = masteredCards.length;
+    const mastery = cards.length ? Math.round(masteredCards.length / cards.length * 100) : 0;
+    els.masteryPercentage.textContent = `${mastery}%`;
+    els.masteryMeter.setAttribute("aria-valuenow", String(mastery));
+    els.masteryFill.style.width = `${mastery}%`;
 
     if (weakCards.length > 0) {
       els.studyTip.textContent = `当前有 ${weakCards.length} 张生疏卡片，建议优先复习。`;
