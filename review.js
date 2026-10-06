@@ -162,7 +162,13 @@
   }
   function activeCard() { return state.cards.find((card) => card.id === state.activeId); }
   function hasDetailedAnswer(card) { return Boolean(card?.detailedAnswer?.trim()); }
-  function chooseActive() { const cards = filteredCards(); if (!cards.some((card) => card.id === state.activeId)) state.activeId = cards[0]?.id || null; }
+  function chooseActive() {
+    const cards = filteredCards();
+    if (!cards.some((card) => card.id === state.activeId)) {
+      state.activeId = cards[0]?.id || null;
+      state.revealStage = 0;
+    }
+  }
 
   function render() { chooseActive(); renderCategories(); renderStarredFilter(); renderCard(); renderList(); renderStats(); }
   function renderCategories() {
@@ -196,6 +202,7 @@
     });
     [els.weakButton, els.normalButton, els.masteredButton].forEach((button) => button.disabled = !hasCard);
     if (!card) {
+      els.flipButton.textContent = "查看答案";
       els.cardCategory.textContent = "未分类"; els.cardProficiency.textContent = "生疏";
       els.cardCategoryBack.textContent = "未分类"; els.cardProficiencyBack.textContent = "生疏";
       els.cardAnswerLabel.textContent = "精简答案";
@@ -215,8 +222,15 @@
   }
   function renderList() {
     const cards = filteredCards(); els.cardCount.textContent = `${cards.length} 张题目`;
-    els.cardList.innerHTML = cards.map((card) => `<button class="simple-list-card ${card.id === state.activeId ? "active" : ""}" data-proficiency="${escapeHtml(card.proficiency)}" data-starred="${card.starred}" data-id="${escapeHtml(card.id)}" type="button"><span>${escapeHtml(card.category)}</span><strong>${escapeHtml(card.question)}</strong><small>${escapeHtml(card.proficiency)}</small></button>`).join("") || `<p class="note">${state.starredOnly ? "重点集还是空的，点卡片右上角☆标记重点。" : "没有符合条件的卡片。"}</p>`;
+    els.cardList.innerHTML = cards.map((card) => `<button class="simple-list-card ${card.id === state.activeId ? "active" : ""}" aria-current="${card.id === state.activeId}" data-proficiency="${escapeHtml(card.proficiency)}" data-starred="${card.starred}" data-id="${escapeHtml(card.id)}" type="button"><span>${escapeHtml(card.category)}</span><strong>${escapeHtml(card.question)}</strong><small>${escapeHtml(card.proficiency)}</small></button>`).join("") || `<p class="note">${state.starredOnly ? "重点集还是空的，点卡片右上角☆标记重点。" : "没有符合条件的卡片。"}</p>`;
     els.cardList.querySelectorAll("button").forEach((button) => button.onclick = () => { state.activeId = button.dataset.id; state.revealStage = 0; render(); });
+    const selected = els.cardList.querySelector('[aria-current="true"]');
+    if (selected && els.cardList.clientHeight > 0) {
+      const listBounds = els.cardList.getBoundingClientRect();
+      const selectedBounds = selected.getBoundingClientRect();
+      if (selectedBounds.top < listBounds.top) els.cardList.scrollTop += selectedBounds.top - listBounds.top;
+      else if (selectedBounds.bottom > listBounds.bottom) els.cardList.scrollTop += selectedBounds.bottom - listBounds.bottom;
+    }
   }
   function renderStats() {
     const cards = filteredCards();

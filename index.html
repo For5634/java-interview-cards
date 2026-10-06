@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#315be8">
   <title>八股卡片 · 面试复习</title>
-  <link rel="stylesheet" href="styles.css?v=9448787fdf1e">
+  <link rel="stylesheet" href="styles.css?v=690e75bf5b24">
 </head>
 <body class="review-page">
   <aside class="local-notice hidden" id="localStorageNotice" aria-live="polite"><span>本地文件可能无法加载卡片数据。<a href="https://for5634.github.io/java-interview-cards/">打开在线版</a></span><button id="dismissStorageNotice" type="button" aria-label="关闭提示">×</button></aside>
@@ -42,12 +42,12 @@
       <aside class="progress-panel" aria-label="学习进度与备份">
         <div class="progress-heading"><h2>当前复习进度</h2><p id="studyTip">开始复习吧</p></div>
         <div class="stats-grid"><div><strong id="totalCount">0</strong><span>卡片</span></div><div class="stat-weak"><strong id="weakCount">0</strong><span>生疏</span></div><div class="stat-normal"><strong id="normalCount">0</strong><span>一般</span></div><div class="stat-mastered"><strong id="masteredCount">0</strong><span>熟练</span></div></div>
-        <details class="utility-details" id="statsDetails" open><summary>备份进度与快捷键</summary><div class="utility-content"><div class="backup-tools"><p>换设备时，导出并导入备份即可恢复熟练度与星标。</p><div class="backup-actions"><button id="exportProgressButton" type="button">导出备份</button><button id="importProgressButton" type="button">导入备份</button><input class="hidden" id="progressFileInput" type="file" accept="application/json,.json" aria-label="选择进度备份文件"></div></div><p class="keyboard-help"><kbd>F</kbd> 翻面 <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 标记熟练度 <kbd>←</kbd><kbd>→</kbd> 切换卡片</p></div></details>
+        <details class="utility-details" id="statsDetails" open><summary>备份进度与快捷键</summary><div class="utility-content"><div class="backup-tools"><p>换设备时，导出并导入备份即可恢复熟练度与星标。</p><div class="backup-actions"><button id="exportProgressButton" type="button">导出备份</button><button id="importProgressButton" type="button">导入备份</button><input class="hidden" id="progressFileInput" type="file" accept="application/json,.json" aria-label="选择进度备份文件"></div></div><p class="keyboard-help"><span><kbd>F</kbd> 翻面</span><span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> 标记熟练度</span><span><kbd>←</kbd> <kbd>→</kbd> 切换卡片</span></p></div></details>
       </aside>
       </div>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="review.js?v=9448787fdf1e"></script>
+  <script src="review.js?v=690e75bf5b24"></script>
 </body>
 </html>
