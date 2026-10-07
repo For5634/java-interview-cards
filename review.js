@@ -199,6 +199,7 @@
     if (els.flashcard.dataset.viewKey !== viewKey) els.flashcard.scrollTop = 0;
     els.flashcard.dataset.viewKey = viewKey;
     els.flashcard.classList.toggle("flipped", state.revealStage > 0); els.flashcard.dataset.proficiency = card?.proficiency || "生疏"; els.flashcard.dataset.revealStage = state.revealStage; els.flipButton.disabled = !hasCard;
+    document.getElementById("ratingToggleButton").disabled = !hasCard;
     [els.starToggleButton, els.starToggleButtonBack].forEach((button) => {
       button.disabled = !hasCard;
       button.classList.toggle("is-starred", Boolean(card?.starred));
@@ -338,6 +339,24 @@
       els.progressFileInput.value = "";
     }
   }
+
+  // Phone controls expand on demand without changing card data or storage.
+  const ratingMedia = window.matchMedia("(max-width: 900px)");
+  const ratingToggle = document.getElementById("ratingToggleButton");
+  const ratingActions = document.getElementById("ratingActions");
+  const reviewControls = document.querySelector(".review-controls");
+  function setRatingExpanded(expanded) {
+    const restoreFocus = !expanded && ratingActions.contains(document.activeElement);
+    reviewControls.classList.toggle("rating-expanded", expanded);
+    ratingToggle.setAttribute("aria-expanded", String(!ratingMedia.matches || expanded));
+    if (restoreFocus && ratingMedia.matches) ratingToggle.focus({ preventScroll: true });
+  }
+  ratingToggle.onclick = () => setRatingExpanded(!reviewControls.classList.contains("rating-expanded"));
+  ratingActions.addEventListener("click", () => { if (ratingMedia.matches) setRatingExpanded(false); });
+  const updateRatingLayout = () => setRatingExpanded(false);
+  if (ratingMedia.addEventListener) ratingMedia.addEventListener("change", updateRatingLayout);
+  else ratingMedia.addListener(updateRatingLayout);
+  updateRatingLayout();
 
   // Sidebar visibility is presentation state only; card storage stays unchanged.
   const sidebarMedia = window.matchMedia("(max-width: 900px)");
