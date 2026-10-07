@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "contentVersion": "449a06debeb142d5",
+  "contentVersion": "41a46900f6e4a5c2",
   "cards": [
     {
       "id": "card-1791041187688-3l7zv",
@@ -440,7 +440,7 @@
       "proficiency": "生疏",
       "starred": false,
       "question": "Agent有自己的私有记忆的作用是什么?",
-      "briefAnswer": "第一，Agent 不需要每轮从零开始理解自己的上一次判断。\n\n第二，不同 Agent 的内部记录不会混在一起。SafetyAgent 的风险记录不会直接塞给 ResponseAgent 当学生端语言，ResponseAgent 的表达策略也不会污染 UnderstandingAgent 的意图判断。",
+      "briefAnswer": "第一，Agent 不需要每轮从零开始理解自己的上一次判断。\n\n第二，不同 Agent 的内部记录不会混在一起。SUnderstandingAgent 更关心这一轮的意图判断、路由依据；SafetyAgent 更关心风险等级、风险触发证据；ContextAgent 更关心检索到的知识、Memory Brief、RAG 结果。这样不同 Agent 只保留和自己任务相关的信息，能够减少上下文污染和 Token 消耗。",
       "detailedAnswer": ""
     },
     {
