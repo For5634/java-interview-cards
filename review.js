@@ -50,9 +50,8 @@
     els.localStorageNotice.classList.toggle("hidden", location.protocol !== "file:" || dismissed);
   }
   function syncResponsiveDisclosures() {
-    const isMobile = window.matchMedia("(max-width: 720px)").matches;
-    document.getElementById("filterDetails").open = !isMobile;
-    document.getElementById("statsDetails").open = !isMobile;
+    // The drawer controls visibility on small screens; its filters remain expanded.
+    document.getElementById("filterDetails").open = true;
   }
   function cardKey(card) { return `${card.category}\u0000${card.question}`; }
   function hasDamagedText(card) { return [card.category, card.question, card.briefAnswer, card.detailedAnswer].some((text) => String(text || "").includes("\uFFFD")); }
@@ -196,6 +195,9 @@
     els.cardPosition.textContent = hasCard ? `第 ${position} / ${visibleCards.length} 张` : "暂无符合条件的卡片";
     els.previousCardButton.disabled = !hasCard;
     els.nextCardButton.disabled = !hasCard;
+    const viewKey = `${card?.id || "empty"}:${state.revealStage}`;
+    if (els.flashcard.dataset.viewKey !== viewKey) els.flashcard.scrollTop = 0;
+    els.flashcard.dataset.viewKey = viewKey;
     els.flashcard.classList.toggle("flipped", state.revealStage > 0); els.flashcard.dataset.proficiency = card?.proficiency || "生疏"; els.flashcard.dataset.revealStage = state.revealStage; els.flipButton.disabled = !hasCard;
     [els.starToggleButton, els.starToggleButtonBack].forEach((button) => {
       button.disabled = !hasCard;
@@ -204,7 +206,10 @@
       button.setAttribute("aria-label", card?.starred ? "从重点集中移除" : "加入重点集");
       button.querySelector("span").textContent = card?.starred ? "★" : "☆";
     });
-    [els.weakButton, els.normalButton, els.masteredButton].forEach((button) => button.disabled = !hasCard);
+    [[els.weakButton, "生疏"], [els.normalButton, "一般"], [els.masteredButton, "熟练"]].forEach(([button, value]) => {
+      button.disabled = !hasCard;
+      button.setAttribute("aria-pressed", String(hasCard && card.proficiency === value));
+    });
     if (!card) {
       els.flipButton.textContent = "查看答案";
       els.cardCategory.textContent = "未分类"; els.cardProficiency.textContent = "生疏";
@@ -227,7 +232,7 @@
   function renderList() {
     const cards = filteredCards(); els.cardCount.textContent = `${cards.length} 张题目`;
     els.cardList.innerHTML = cards.map((card) => `<button class="simple-list-card ${card.id === state.activeId ? "active" : ""}" aria-current="${card.id === state.activeId}" data-proficiency="${escapeHtml(card.proficiency)}" data-starred="${card.starred}" data-id="${escapeHtml(card.id)}" type="button"><span>${escapeHtml(card.category)}</span><strong>${escapeHtml(card.question)}</strong><small>${escapeHtml(card.proficiency)}</small></button>`).join("") || `<p class="note">${state.starredOnly ? "重点集还是空的，点卡片右上角☆标记重点。" : "没有符合条件的卡片。"}</p>`;
-    els.cardList.querySelectorAll("button").forEach((button) => button.onclick = () => { state.activeId = button.dataset.id; state.revealStage = 0; render(); });
+    els.cardList.querySelectorAll("button").forEach((button) => button.onclick = () => { state.activeId = button.dataset.id; state.revealStage = 0; render(); if (sidebarMedia.matches) setSidebarCollapsed(true, true); });
     const selected = els.cardList.querySelector('[aria-current="true"]');
     if (selected && els.cardList.clientHeight > 0) {
       const listBounds = els.cardList.getBoundingClientRect();
@@ -333,6 +338,55 @@
       els.progressFileInput.value = "";
     }
   }
+
+  // Sidebar visibility is presentation state only; card storage stays unchanged.
+  const sidebarMedia = window.matchMedia("(max-width: 900px)");
+  const workspace = document.getElementById("reviewWorkspace");
+  const sidebar = document.getElementById("libraryPanel");
+  const sidebarToggle = document.getElementById("sidebarToggleButton");
+  const sidebarClose = document.getElementById("closeSidebarButton");
+  const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+  let sidebarCollapsed = sidebarMedia.matches;
+  function setSidebarCollapsed(collapsed, focusToggle = false) {
+    sidebarCollapsed = collapsed;
+    workspace.classList.toggle("sidebar-collapsed", collapsed);
+    sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+    sidebarToggle.setAttribute("aria-label", collapsed ? "展开题库" : "收起题库");
+    sidebarToggle.title = collapsed ? "展开题库" : "收起题库";
+    sidebar.inert = collapsed;
+    const drawerOpen = sidebarMedia.matches && !collapsed;
+    document.querySelector(".main-column").inert = drawerOpen;
+    sidebarBackdrop.classList.toggle("hidden", !drawerOpen);
+    document.body.classList.toggle("sidebar-drawer-open", drawerOpen);
+    if (drawerOpen) {
+      sidebar.setAttribute("role", "dialog");
+      sidebar.setAttribute("aria-modal", "true");
+      document.getElementById("filterDetails").open = true;
+    } else {
+      sidebar.removeAttribute("role");
+      sidebar.removeAttribute("aria-modal");
+    }
+    if (focusToggle) sidebarToggle.focus({ preventScroll: true });
+  }
+  sidebarToggle.onclick = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+    if (sidebarMedia.matches && !sidebarCollapsed) sidebarClose.focus({ preventScroll: true });
+  };
+  sidebarClose.onclick = sidebarBackdrop.onclick = () => setSidebarCollapsed(true, true);
+  const updateSidebarLayout = () => setSidebarCollapsed(sidebarMedia.matches);
+  if (sidebarMedia.addEventListener) sidebarMedia.addEventListener("change", updateSidebarLayout);
+  else sidebarMedia.addListener(updateSidebarLayout);
+  document.addEventListener("keydown", (event) => {
+    if (!sidebarMedia.matches || sidebarCollapsed) return;
+    if (event.key === "Escape") { event.preventDefault(); setSidebarCollapsed(true, true); }
+    if (event.key === "Tab") {
+      const controls = [...sidebar.querySelectorAll("button:not(:disabled), input, summary")].filter((element) => element.getClientRects().length);
+      const first = controls[0]; const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  setSidebarCollapsed(sidebarCollapsed);
 
   document.getElementById("dismissStorageNotice").onclick = () => {
     els.localStorageNotice.classList.add("hidden");
