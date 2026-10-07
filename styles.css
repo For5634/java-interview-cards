@@ -119,6 +119,8 @@ button svg { stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; str
 .answer-question { margin: 16px 0 20px; }
 .answer-section { max-width: 56rem; padding-top: 16px; border-top: 1px solid var(--line); }
 .answer-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.answer-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.reading-toggle, .reading-toolbar, .progress-toggle { display: none; }
 .side-label { margin: 0; color: var(--accent); font-size: 12px; font-weight: 600; }
 .answer-content { max-width: 52em; color: #364d3f; font-size: 16px; line-height: 1.85; overflow-wrap: anywhere; }
 .answer-content p { margin: 0 0 12px; }
@@ -205,12 +207,38 @@ kbd { font-family: Consolas, monospace; font-size: 10px; border: 1px solid #d0df
   .review-controls .rating-actions { flex-basis: 100%; order: 3; }
   .review-controls .rating-actions button { flex: 1; }
   .utility-content { align-items: flex-start; flex-direction: column; }
+  .reading-toggle { display: inline-flex; align-items: center; justify-content: center; }
+  .progress-panel { position: relative; gap: 8px; padding: 8px 12px; }
+  .progress-overview { flex-basis: 100%; padding-right: 112px; gap: 12px; }
+  .progress-heading { width: 100%; gap: 8px; min-height: 28px; }
+  .mastery-meter { flex: 1; width: auto; min-width: 24px; }
+  .progress-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; position: absolute; top: 4px; right: 8px; min-height: 36px; padding: 6px 4px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 12px; }
+  .progress-toggle:hover { background: #e7f1eb; }
+  .progress-toggle svg { width: 14px; height: 14px; }
+  .progress-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .progress-panel:not(.progress-expanded) .stats-grid, .progress-panel:not(.progress-expanded) .utility-details { display: none; }
+  .progress-expanded .progress-overview { padding-right: 0; }
+  .progress-expanded .progress-heading { padding-right: 112px; }
+  .progress-panel .stats-grid { width: 100%; justify-content: space-between; gap: 8px; }
+  .progress-panel .utility-details { width: 100%; }
+  .reading-expanded { overflow: hidden; }
+  .reading-expanded .page-header, .reading-expanded .library-panel, .reading-expanded .study-toolbar, .reading-expanded .progress-panel { visibility: hidden; }
+  .reading-expanded .study-card { position: fixed; inset: max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)); z-index: 20; }
+  .reading-expanded .flashcard { flex: 1; }
+  .reading-expanded .reading-toggle { display: none; }
+  .reading-expanded .reading-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 12px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .reading-toolbar span { font-size: 12px; color: var(--muted); }
+  .reading-toolbar button { min-height: 36px; padding: 6px 10px; border: 0; border-radius: var(--control-radius); background: #eef5ef; color: var(--accent); font-size: 12px; }
 }
 @media (max-width: 520px) {
+  :root { --workspace-height: calc(100dvh - 64px); }
+  .review-shell { padding: 0 12px 12px; }
+  .page-header { min-height: 44px; padding: 6px 0; margin-bottom: 8px; }
+  .brand-symbol, .brand-symbol svg { width: 26px; height: 26px; }
   .brand h1 { font-size: 18px; }
   .local-navigation { gap: 10px; font-size: 11px; }
   .toolbar-heading { gap: 8px; }
-  .study-toolbar { flex-wrap: wrap; gap: 8px; }
+  .study-toolbar { flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
   .study-toolbar h2 { font-size: 14px; }
   .sidebar-toggle { width: 40px; min-height: 40px; padding: 0; }
   #sidebarToggleLabel { display: none; }
@@ -222,6 +250,10 @@ kbd { font-family: Consolas, monospace; font-size: 10px; border: 1px solid #d0df
   .star-toggle { width: 40px; height: 40px; flex-basis: 40px; }
   .card-badges > span { font-size: 11px; padding: 4px 7px; }
   .question, .answer-question { font-size: 21px; line-height: 1.6; }
+  .card-back { padding: 12px; }
+  .answer-question { margin: 8px 0 12px; font-size: 17px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .answer-section { padding-top: 12px; }
+  .answer-heading { margin-bottom: 8px; }
   .answer-content { font-size: 15px; line-height: 1.85; }
   .answer-heading { align-items: flex-start; }
   .detail-trigger { min-height: 36px; }
@@ -231,10 +263,6 @@ kbd { font-family: Consolas, monospace; font-size: 10px; border: 1px solid #d0df
   .rating-actions { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); grid-column: 1/-1; }
   .rating-actions button { min-width: 0; min-height: 36px; gap: 8px; padding: 6px; }
   .review-note { display: none; }
-  .progress-panel { gap: 12px; padding: 12px; }
-  .progress-overview { gap: 12px; flex-basis: 100%; }
-  .progress-heading { width: 100%; }
-  .mastery-meter { flex: 1; width: auto; }
   .stats-grid { width: 100%; justify-content: space-between; gap: 8px; }
   .stats-grid > div { gap: 4px; }
   .utility-details { width: 100%; }

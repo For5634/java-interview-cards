@@ -189,6 +189,7 @@
   }
   function renderCard() {
     const card = activeCard(); const hasCard = Boolean(card);
+    if (!hasCard || state.revealStage === 0) setReadingExpanded(false, true);
     const visibleCards = filteredCards();
     const position = visibleCards.findIndex((item) => item.id === card?.id) + 1;
     els.collectionTitle.textContent = state.starredOnly ? `重点集${state.category !== "全部" ? ` / ${state.category}` : ""}` : state.category === "全部" ? "全部卡片" : state.category;
@@ -357,6 +358,60 @@
   if (ratingMedia.addEventListener) ratingMedia.addEventListener("change", updateRatingLayout);
   else ratingMedia.addListener(updateRatingLayout);
   updateRatingLayout();
+
+  const progressPanel = document.querySelector(".progress-panel");
+  const progressToggle = document.getElementById("progressToggleButton");
+  function setProgressExpanded(expanded) {
+    const restoreFocus = !expanded && progressPanel.contains(document.activeElement) && document.activeElement !== progressToggle;
+    progressPanel.classList.toggle("progress-expanded", expanded);
+    progressToggle.setAttribute("aria-expanded", String(!ratingMedia.matches || expanded));
+    if (restoreFocus && ratingMedia.matches) progressToggle.focus({ preventScroll: true });
+  }
+  progressToggle.onclick = () => setProgressExpanded(!progressPanel.classList.contains("progress-expanded"));
+  const updateProgressLayout = () => setProgressExpanded(false);
+  if (ratingMedia.addEventListener) ratingMedia.addEventListener("change", updateProgressLayout);
+  else ratingMedia.addListener(updateProgressLayout);
+  updateProgressLayout();
+
+  const readingToggle = document.getElementById("readingToggleButton");
+  const readingClose = document.getElementById("closeReadingButton");
+  const studyCard = document.querySelector(".study-card");
+  function setReadingExpanded(expanded, restoreFocus = false) {
+    if (expanded && (!ratingMedia.matches || !activeCard() || state.revealStage === 0)) return;
+    const wasExpanded = document.body.classList.contains("reading-expanded");
+    document.body.classList.toggle("reading-expanded", expanded);
+    if (expanded) {
+      studyCard.setAttribute("role", "dialog");
+      studyCard.setAttribute("aria-modal", "true");
+      studyCard.setAttribute("aria-label", "答案全文阅读");
+      readingClose.focus({ preventScroll: true });
+    } else {
+      studyCard.removeAttribute("role");
+      studyCard.removeAttribute("aria-modal");
+      studyCard.removeAttribute("aria-label");
+      if (wasExpanded && restoreFocus) (state.revealStage > 0 ? readingToggle : els.flipButton).focus({ preventScroll: true });
+    }
+  }
+  readingToggle.onclick = () => setReadingExpanded(true);
+  readingClose.onclick = () => setReadingExpanded(false, true);
+  const updateReadingLayout = () => {
+    if (!ratingMedia.matches && document.body.classList.contains("reading-expanded")) {
+      setReadingExpanded(false);
+      els.flashcard.focus({ preventScroll: true });
+    }
+  };
+  if (ratingMedia.addEventListener) ratingMedia.addEventListener("change", updateReadingLayout);
+  else ratingMedia.addListener(updateReadingLayout);
+  document.addEventListener("keydown", event => {
+    if (!document.body.classList.contains("reading-expanded")) return;
+    if (event.key === "Escape") { event.preventDefault(); setReadingExpanded(false, true); }
+    if (event.key === "Tab") {
+      const controls = [...studyCard.querySelectorAll("button:not(:disabled), [tabindex='0']")].filter(element => element.getClientRects().length);
+      const first = controls[0]; const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
 
   // Sidebar visibility is presentation state only; card storage stays unchanged.
   const sidebarMedia = window.matchMedia("(max-width: 900px)");
