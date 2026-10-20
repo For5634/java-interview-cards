@@ -4,21 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#dff1e7">
+  <link rel="manifest" href="review.webmanifest">
+  <link rel="apple-touch-icon" href="assets/app-icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>八股卡片 · 面试复习</title>
-  <link rel="stylesheet" href="styles.css?v=11eb7033a569">
+  <link rel="stylesheet" href="styles.css?v=8f7cabb0e48c">
 </head>
 <body class="review-page">
   <aside class="local-notice hidden" id="localStorageNotice" aria-live="polite"><span>本地文件可能无法加载卡片数据。<a href="https://for5634.github.io/java-interview-cards/">打开在线版</a></span><button id="dismissStorageNotice" type="button" aria-label="关闭提示">×</button></aside>
   <div class="review-shell">
     <header class="page-header">
       <div class="brand"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="5" y="5" width="19" height="23" rx="3" transform="rotate(-9 5 5)"/><rect x="10" y="3" width="19" height="23" rx="3"/><path d="M15 10h9M15 15h6"/></svg></span><h1>八股卡片</h1></div>
-      <span class="header-note"><span class="status-dot" aria-hidden="true"></span>进度自动保存在此浏览器</span>
+      <nav class="local-navigation" aria-label="卡片管理"><button id="newCardButton" type="button" aria-haspopup="dialog" aria-controls="cardEditorDialog" disabled>＋ 新增卡片</button><button id="editCurrentCardButton" type="button" aria-haspopup="dialog" aria-controls="cardEditorDialog" disabled>编辑卡片</button></nav>
+      <span class="header-note" id="headerSyncNote">正在检查同步状态…</span>
     </header>
     <main class="review-workspace" id="reviewWorkspace">
       <aside class="library-panel" id="libraryPanel" aria-label="卡片目录">
         <div class="library-title"><h2>题库</h2><button id="closeSidebarButton" type="button" aria-label="关闭题库">×</button></div>
         <label class="search-field" for="searchInput"><svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="searchInput" type="search" placeholder="搜索题目或答案" autocomplete="off"><span class="sr-only">搜索卡片</span></label>
         <div class="collection-switch" aria-label="选择卡片集"><button class="collection-button active" id="allCardsButton" type="button" aria-pressed="true">全部卡片</button><button class="collection-button" id="starredFilterButton" type="button" aria-pressed="false">★ 重点集 (0)</button></div>
+        <label class="proficiency-filter" for="proficiencyFilter">熟练度<select id="proficiencyFilter"><option value="全部">全部熟练度</option><option>生疏</option><option>一般</option><option>熟练</option></select></label>
         <details class="library-details" id="filterDetails" open>
           <summary>分类与题目目录</summary>
           <div class="library-content"><div class="library-heading">知识分类</div><div class="category-grid" id="categoryFilters"></div><div class="list-heading"><span id="cardCount">加载卡片中</span><span>生疏优先</span></div><div class="card-list" id="cardList" aria-label="卡片列表"></div></div>
@@ -36,23 +41,43 @@
           </div>
           <div class="card-back card-face">
             <div class="card-meta"><div class="card-badges"><span id="cardCategoryBack">未分类</span><span class="proficiency-badge" id="cardProficiencyBack">生疏</span></div><button class="star-toggle" id="starToggleButtonBack" type="button" aria-label="加入重点集" aria-pressed="false"><span aria-hidden="true">☆</span></button></div>
-            <h2 class="answer-question" id="cardQuestionBack"></h2><section class="answer-section" aria-label="卡片答案"><div class="answer-heading"><p class="side-label" id="cardAnswerLabel">精简答案</p><div class="answer-actions"><button class="detail-trigger hidden" id="showDetailedButton" type="button">展开详细答案</button><button class="detail-trigger reading-toggle" id="readingToggleButton" type="button">全屏阅读</button></div></div><div class="answer-content" id="cardAnswer">答案会显示在这里。</div></section>
+            <h2 class="answer-question" id="cardQuestionBack"></h2><button class="question-expand" id="expandQuestionButton" type="button" aria-expanded="false" aria-controls="cardQuestionBack">展开完整题目</button><section class="answer-section" aria-label="卡片答案"><div class="answer-heading"><p class="side-label" id="cardAnswerLabel">精简答案</p><div class="answer-actions"><button class="detail-trigger hidden" id="showDetailedButton" type="button">展开详细答案</button><button class="detail-trigger reading-toggle" id="readingToggleButton" type="button">全屏阅读</button></div></div><div class="answer-content" id="cardAnswer">答案会显示在这里。</div></section>
           </div>
         </article>
-        <div class="review-controls"><button class="flip-button" id="flipButton" type="button">查看答案</button><button class="rating-toggle" id="ratingToggleButton" type="button" aria-expanded="false" aria-controls="ratingActions"><span>标记熟练度</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="rating-actions" id="ratingActions" role="group" aria-label="更新记忆熟练度"><button class="rating-weak" id="weakButton" type="button" aria-pressed="false"><span>生疏</span><kbd aria-hidden="true">1</kbd></button><button class="rating-normal" id="normalButton" type="button" aria-pressed="false"><span>一般</span><kbd aria-hidden="true">2</kbd></button><button class="rating-mastered" id="masteredButton" type="button" aria-pressed="false"><span>熟练</span><kbd aria-hidden="true">3</kbd></button></div><span class="review-note">标记后自动进入下一题</span></div>
+        <div class="review-controls"><button class="flip-button" id="flipButton" type="button">查看答案</button><button class="rating-toggle" id="ratingToggleButton" type="button" aria-expanded="false" aria-controls="ratingActions"><span>标记熟练度</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="rating-actions" id="ratingActions" role="group" aria-label="更新记忆熟练度"><button class="rating-weak" id="weakButton" type="button" aria-pressed="false"><span>生疏</span><kbd aria-hidden="true">1</kbd></button><button class="rating-normal" id="normalButton" type="button" aria-pressed="false"><span>一般</span><kbd aria-hidden="true">2</kbd></button><button class="rating-mastered" id="masteredButton" type="button" aria-pressed="false"><span>熟练</span><kbd aria-hidden="true">3</kbd></button></div><button class="undo-rating-button" id="undoRatingButton" type="button" disabled aria-label="撤销上次熟练度标记">撤销标记</button><span class="review-note">标记后自动进入下一题</span></div>
         </div>
       </section>
       <aside class="progress-panel" aria-label="学习进度与备份">
+        <nav class="sync-status-bar" aria-label="设备同步"><span id="syncStatus" role="status" aria-live="polite">正在准备题库…</span><button id="retrySyncButton" type="button" hidden>重试同步</button><button id="phoneSyncButton" type="button" aria-haspopup="dialog">设备同步</button></nav>
         <button class="progress-toggle" id="progressToggleButton" type="button" aria-expanded="false" aria-controls="progressStats statsDetails"><span>统计与备份</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="progress-overview"><div class="progress-heading"><h2 class="sr-only">这组卡片的学习进度</h2><span class="progress-title">已熟练 <strong id="masteryPercentage">0%</strong></span><div class="mastery-meter" id="masteryMeter" role="progressbar" aria-label="当前卡片集的熟练掌握比例" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="masteryFill"></span></div><p id="studyTip" class="sr-only" aria-live="polite">开始复习吧</p></div>
         <div class="stats-grid" id="progressStats"><div><strong id="totalCount">0</strong><span>总题数</span></div><div class="stat-weak"><strong id="weakCount">0</strong><span>生疏</span></div><div class="stat-normal"><strong id="normalCount">0</strong><span>一般</span></div><div class="stat-mastered"><strong id="masteredCount">0</strong><span>熟练</span></div></div></div>
-        <details class="utility-details" id="statsDetails"><summary>备份与快捷键</summary><div class="utility-content"><div class="backup-tools"><p>换设备时，导出并导入备份即可恢复熟练度与星标。</p><div class="backup-actions"><button id="exportProgressButton" type="button">导出备份</button><button id="importProgressButton" type="button">导入备份</button><input class="hidden" id="progressFileInput" type="file" accept="application/json,.json" aria-label="选择进度备份文件"></div></div><p class="keyboard-help"><span><kbd>F</kbd> 翻面</span><span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> 标记熟练度</span><span><kbd>←</kbd> <kbd>→</kbd> 切换卡片</span></p></div></details>
+        <details class="utility-details" id="statsDetails"><summary>备份与快捷键</summary><div class="utility-content"><div class="backup-tools"><p>完整备份包含题目、答案、熟练度与星标；也兼容旧版进度备份。</p><div class="backup-actions"><button id="historyButton" type="button" aria-haspopup="dialog">历史版本与恢复</button><button id="exportLibraryButton" type="button">导出完整题库</button><button id="exportProgressButton" type="button">仅导出进度</button><button id="importProgressButton" type="button">导入备份</button><input class="hidden" id="progressFileInput" type="file" accept="application/json,.json" aria-label="选择题库或进度备份文件"></div></div><p class="keyboard-help"><span><kbd>F</kbd> 翻面</span><span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> 标记熟练度</span><span><kbd>←</kbd> <kbd>→</kbd> 切换卡片</span></p></div></details>
       </aside>
       </div>
     </main>
   </div>
+  <dialog class="card-editor" id="cardEditorDialog" aria-labelledby="cardEditorTitle" aria-describedby="cardEditorDescription">
+    <form class="card-editor-form" id="cardEditorForm">
+      <header class="editor-header"><div><h2 id="cardEditorTitle">编辑当前卡片</h2><p id="cardEditorDescription">保存后留在当前卡片，继续复习。</p></div><button class="editor-close" id="closeCardEditorButton" type="button" aria-label="关闭编辑">×</button></header>
+      <div class="editor-fields">
+        <div class="editor-meta"><label>卡片分类<select name="category" id="editorCategorySelect" required></select></label><label>记忆熟练度<select name="proficiency"><option>生疏</option><option>一般</option><option>熟练</option></select></label></div>
+        <label class="hidden" id="editorNewCategoryField">新建分类<input name="newCategory" autocomplete="off" placeholder="例如：微服务"></label>
+        <label>题面<textarea name="question" required rows="3"></textarea></label>
+        <label>精简答案<textarea name="briefAnswer" required rows="4"></textarea></label>
+        <label>详细答案（可选）<textarea name="detailedAnswer" rows="9"></textarea><span class="editor-hint">支持 **加粗** 和行内代码格式。</span></label>
+      </div>
+      <footer class="editor-footer"><p id="cardEditorStatus" role="status" aria-live="polite"></p><div class="editor-footer-actions"><button class="editor-delete" id="deleteCurrentCardButton" type="button">删除卡片</button><span class="editor-action-spacer"></span><button class="editor-cancel" id="cancelCardEditorButton" type="button">取消</button><button class="editor-save" type="submit">保存修改</button></div></footer>
+    </form>
+  </dialog>
+  <dialog class="card-editor sync-dialog" id="syncConflictDialog" aria-labelledby="syncConflictTitle">
+    <form class="card-editor-form" id="syncConflictForm"><header class="editor-header"><div><h2 id="syncConflictTitle">核对不同设备的修改</h2><p>互不冲突的修改会合并。下面的卡片需要你选择保留哪个版本。</p></div></header><div class="editor-fields" id="syncConflictList"></div><footer class="editor-footer"><p id="syncConflictStatus" role="status"></p><div class="editor-footer-actions"><button class="editor-cancel" id="exportConflictBackupButton" type="button">导出本设备备份</button><span class="editor-action-spacer"></span><button class="editor-cancel" id="laterConflictButton" type="button">稍后处理</button><button class="editor-save" type="submit">合并并同步</button></div></footer></form>
+  </dialog>
+  <dialog class="card-editor sync-dialog" id="phoneSyncDialog" aria-labelledby="phoneSyncTitle"><div class="card-editor-form"><header class="editor-header"><div><h2 id="phoneSyncTitle">连接电脑与手机</h2><p>手机扫码一次，以后打开页面即可继续复习。</p></div><button class="editor-close" id="closePhoneSyncButton" type="button" aria-label="关闭设备同步">×</button></header><div class="editor-fields"><p class="phone-sync-help">无需登录，不要求同一 Wi-Fi，电脑关机后手机仍可使用。卡片、答案、熟练度与星标通过你的云端题库同步。</p><button id="installAppButton" type="button" class="private-link-action">添加到手机主屏幕</button><p id="installAppHint" class="phone-sync-help">首次联网打开后，会准备离线复习所需的页面。</p><div id="phoneSyncAddresses" role="status"></div><div class="private-link-qr hidden" id="privateLinkQr" aria-label="专属同步链接二维码"></div><p class="phone-sync-help" id="privateLinkHint">已有专属链接时，粘贴到下面关联本设备。浏览器会记住关联信息。</p><form class="private-link-form" id="privateLinkForm"><label>关联已有链接<input id="privateLinkInput" type="url" autocomplete="off" spellcheck="false" placeholder="粘贴你的完整专属链接" required></label><button type="submit">关联此设备</button></form><p class="phone-sync-help">链接相当于你的题库钥匙，请自己保存。清除浏览器数据后，可用原链接重新关联。</p></div></div></dialog>
   <button class="sidebar-backdrop hidden" id="sidebarBackdrop" type="button" aria-label="关闭题库"></button>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="review.js?v=11eb7033a569"></script>
+  <dialog class="card-editor sync-dialog" id="historyDialog" aria-labelledby="historyTitle"><div class="card-editor-form"><header class="editor-header"><div><h2 id="historyTitle">历史版本与恢复</h2><p>自动保留最近 20 个版本。先预览变化，再恢复。</p></div><button class="editor-close" id="closeHistoryButton" type="button" aria-label="关闭历史版本">×</button></header><div class="editor-fields"><p id="historyStatus" role="status" aria-live="polite"></p><div id="historyList" class="history-list"></div><section id="historyPreview" hidden></section><button id="restoreHistoryButton" type="button" class="private-link-action" hidden>恢复此版本</button></div></div></dialog>
+  <script src="assets/vendor/qrcode-generator/qrcode.js?v=2.0.4"></script>
+  <script src="review.js?v=8f7cabb0e48c"></script>
 </body>
 </html>
